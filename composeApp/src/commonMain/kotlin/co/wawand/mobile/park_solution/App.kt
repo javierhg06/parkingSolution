@@ -1,0 +1,40 @@
+package co.wawand.mobile.park_solution
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import co.wawand.mobile.park_solution.shared.Constants.WEB_CLIENT_ID
+import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
+import com.mmk.kmpauth.google.GoogleAuthCredentials
+import com.mmk.kmpauth.google.GoogleAuthProvider
+import org.jetbrains.compose.ui.tooling.preview.Preview
+import org.koin.compose.koinInject
+
+@Composable
+@Preview
+fun App() {
+    MaterialTheme {
+        val userRepository = koinInject<UserRepository>()
+        val isSignedIn = remember { userRepository.getCurrentUserId() != null }
+        val startDestination by remember { mutableStateOf(if (isSignedIn) Screen.MainScreen else Screen.SignInScreen) }
+        var appReady by remember { mutableStateOf(false) }
+
+        LaunchedEffect(Unit) {
+            GoogleAuthProvider.create(
+                credentials = GoogleAuthCredentials(serverId = WEB_CLIENT_ID)
+            )
+            appReady = true
+        }
+
+        AnimatedVisibility(modifier = Modifier.fillMaxSize(), visible = appReady) {
+            Navigation(startDestination = startDestination)
+        }
+    }
+}
