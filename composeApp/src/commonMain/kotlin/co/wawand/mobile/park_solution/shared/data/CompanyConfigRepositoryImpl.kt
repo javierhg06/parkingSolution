@@ -17,31 +17,45 @@ class CompanyConfigRepositoryImpl : CompanyConfigRepository {
     }
 
     override fun getCompanyConfigById(id: String) = flow {
-        Firebase.firestore.collection("company_configs")
-            .document(id).snapshots.collect { documentSnapshot ->
-                emit(documentSnapshot.data<CompanyConfig>())
-            }
+        val doc = Firebase.firestore
+            .collection("company_configs")
+            .document(id)
+            .get()
+        emit(doc.data<CompanyConfig>())
     }
 
     override fun getCompanyByOwnerId(ownerId: String) = flow {
-        Firebase.firestore.collection("company_configs")
-            .where { "ownerId" equalTo ownerId }
-            .snapshots
-            .collect { documentSnapshot ->
-                documentSnapshot.documents.singleOrNull().let {
-                    emit(it?.data<CompanyConfig>())
-                }
-            }
+        val querySnapshot = Firebase.firestore
+            .collection("company_configs")
+            .where { "ownerId" equalTo  ownerId }
+            .limit(1)
+            .get()
+
+
+        val config = querySnapshot.documents.firstOrNull()?.data<CompanyConfig>()
+        println("---------->> getCompanyByOwnerId ownerId: $ownerId")
+        println("---------->> getCompanyByOwnerId  config: $config")
+        emit(config)
     }
 
-    override suspend fun addCompanyConfig(companyConfig: CompanyConfig) {
-        try {
-            Firebase.firestore.collection("company_configs")
-                .document(companyConfig.id)
-                .set(companyConfig)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+    override fun getCompanyByAccessCode(accessCode: String) = flow {
+        val querySnapshot = Firebase.firestore
+            .collection("company_configs")
+            .where { "accessCode" equalTo  accessCode }
+            .limit(1)
+            .get()
+
+
+        val config = querySnapshot.documents.firstOrNull()?.data<CompanyConfig>()
+        println("---------->> getCompanyByAccessCode ownerId: $accessCode")
+        println("---------->> getCompanyByAccessCode  config: $config")
+        emit(config)
+    }
+
+    override suspend fun saveCompanyConfig(companyConfig: CompanyConfig) {
+        Firebase.firestore.collection("company_configs")
+            .document(companyConfig.id)
+            .set(companyConfig)
     }
 
     override suspend fun updateCompanyConfig(companyConfig: CompanyConfig) {

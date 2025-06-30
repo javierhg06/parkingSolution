@@ -1,5 +1,6 @@
 package co.wawand.mobile.park_solution.di
 
+import co.wawand.mobile.park_solution.AppViewModel
 import co.wawand.mobile.park_solution.shared.data.CompanyConfigRepositoryImpl
 import co.wawand.mobile.park_solution.shared.data.UserRepositoryImpl
 import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepository
@@ -21,7 +22,7 @@ val sharedModule = module {
     viewModelOf(::MainViewModel)
     viewModelOf(::ProfileViewModel)
     viewModelOf(::CompanySettingsViewModel)
-
+    viewModelOf(::AppViewModel)
 }
 
 fun initializeKoin(

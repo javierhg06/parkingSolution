@@ -6,20 +6,15 @@ import kotlin.uuid.Uuid
 @Serializable
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 data class CompanyConfig(
-    val id: String =Uuid.random().toHexString(),
+    val id: String = Uuid.random().toHexString(),
     val name: String,
-    val allowedWifiSSID: String,
-    val totalSpaces: Int,
-    val autoResetTime: Boolean,
+    val address: String,
+    val wifiNetwork: String,
+    val latitude: Double,
+    val longitude: Double,
+    val totalParkingSpaces: Int,
+    val accessCode: String,
     val ownerId: String
-    //val workingHours: WorkingHours,
-    //val location: Location
-)
-
-@Serializable
-data class Location(
-    val lat: Double,
-    val lng: Double
 )
 
 @Serializable

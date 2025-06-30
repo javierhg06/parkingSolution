@@ -1,6 +1,5 @@
 package co.wawand.mobile.park_solution.shared.data
 
-import co.wawand.mobile.park_solution.shared.domain.model.CompanyConfig
 import co.wawand.mobile.park_solution.shared.domain.model.User
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
 import co.wawand.mobile.park_solution.shared.util.RequestState
@@ -11,11 +10,33 @@ import dev.gitlive.firebase.firestore.firestore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flow
 
 class UserRepositoryImpl : UserRepository {
 
     override fun getCurrentUserId(): String? {
         return Firebase.auth.currentUser?.uid
+    }
+
+    override fun getUserById(id: String) = flow {
+        val document = Firebase.firestore.collection("users").document(id).get()
+        emit(document.data<User>())
+        /*
+            Get the information from cache storage
+             Firebase.firestore.collection("users").document(id).snapshots.collect { documentSnapshot ->
+                 emit(documentSnapshot.data<User>())
+             }
+             */
+    }
+
+    override fun isInSuperUserList(email: String) = flow {
+        val querySnapshot = Firebase.firestore.collection("super_users")
+            .where { "email" equalTo email }
+            .limit(1)
+            .get()
+
+        println("---------->> isInSuperUserList: ${querySnapshot.documents.size}") //querySnapshot.documents.size
+        emit(querySnapshot.documents.isNotEmpty())
     }
 
     override suspend fun createUser(
@@ -50,6 +71,21 @@ class UserRepositoryImpl : UserRepository {
         }
     }
 
+    override suspend fun saveUser(user: User) {
+        try {
+            val userCollection = Firebase.firestore.collection("users")
+            userCollection.document(user.id).set(user)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override suspend fun updateUser(user: User) {
+        Firebase.firestore.collection("users")
+            .document(user.id).set(user)
+    }
+
     override fun readUserFlow(): Flow<RequestState<User>> = channelFlow {
         try {
             val userId = getCurrentUserId()
@@ -61,7 +97,7 @@ class UserRepositoryImpl : UserRepository {
                         val user = User(
                             id = document.id,
                             email = document.get(field = "email"),
-                            name = document.get(field ="name"),
+                            name = document.get(field = "name"),
                             isSuperUser = document.get(field = "isSuperUser"),
                             companyId = document.get(field = "companyId")
                         )

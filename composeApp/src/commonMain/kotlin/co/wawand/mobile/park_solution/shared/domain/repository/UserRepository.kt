@@ -8,12 +8,20 @@ import kotlinx.coroutines.flow.Flow
 interface UserRepository {
     fun getCurrentUserId(): String?
 
+    fun getUserById(id: String): Flow<User?>
+
+    fun isInSuperUserList(email: String): Flow<Boolean>
+
     suspend fun createUser(
         user: FirebaseUser?,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     )
 
+    suspend fun saveUser(user: User)
+
+    suspend fun updateUser(user: User)
+
     fun readUserFlow(): Flow<RequestState<User>>
-    suspend fun signOut():RequestState<Unit>
+    suspend fun signOut(): RequestState<Unit>
 }

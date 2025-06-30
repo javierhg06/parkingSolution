@@ -122,7 +122,7 @@ fun CompanySettingsContent() {
             title = "WiFi Configuration"
         ) {
             OutlinedTextField(
-                value = uiState.wifiSSID,
+                value = uiState.wifiNetwork,
                 onValueChange = { viewModel.onWifiSSIDChanged(it) },
                 placeholder = { Text(text = "WiFi Name") },
                 modifier = Modifier.fillMaxWidth(),
@@ -162,7 +162,7 @@ fun CompanySettingsContent() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Total Spaces: ${uiState.parkingSpaces}",
+                    text = "Total Spaces: ${uiState.totalParkingSpaces}",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color.Black
@@ -174,7 +174,7 @@ fun CompanySettingsContent() {
                     ) {
                         // Add button
                         FloatingActionButton(
-                            onClick = { viewModel.onParkingSpacesChanged(uiState.parkingSpaces + 1) },
+                            onClick = { viewModel.onParkingSpacesChanged(uiState.totalParkingSpaces + 1) },
                             modifier = Modifier.size(48.dp),
                             containerColor = Color(0xFF4CAF50),
                             contentColor = Color.White
@@ -189,8 +189,8 @@ fun CompanySettingsContent() {
                         // Remove button
                         FloatingActionButton(
                             onClick = {
-                                if (uiState.parkingSpaces > 2) viewModel.onParkingSpacesChanged(
-                                    uiState.parkingSpaces - 1
+                                if (uiState.totalParkingSpaces > 2) viewModel.onParkingSpacesChanged(
+                                    uiState.totalParkingSpaces - 1
                                 ) // Minimum 2 spaces
                             },
                             modifier = Modifier.size(48.dp),

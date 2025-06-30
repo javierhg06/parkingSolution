@@ -22,8 +22,6 @@ class MainViewModel(private val userRepository: UserRepository) : ViewModel() {
             } else if (result.isError()) {
                 onError(result.getErrorMessage())
             }
-
         }
     }
-
 }

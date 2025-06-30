@@ -61,6 +61,8 @@ import rememberMessageBarState
 @Composable
 fun SignInScreen(
     navigateToHome: () -> Unit = {},
+    navigateToCreateCompany: () -> Unit = {},
+    navigateToJoinCompany: () -> Unit = {},
 ) {
     val viewModel = koinViewModel<SignInViewModel>()
     val messageBarState = rememberMessageBarState()
@@ -195,18 +197,22 @@ fun SignInScreen(
                     linkAccount = false,
                     onResult = { result ->
                         result.onSuccess { user ->
-                            viewModel.createUser(
+                            viewModel.signInAndRedirectUser(
                                 user = user,
-                                onSuccess = {
+                                onSuccess = { redirectAfterSignIn ->
                                     scope.launch {
                                         messageBarState.addSuccess("Successfully signed in.")
                                         delay(1000)
-                                        navigateToHome()
+                                        when (redirectAfterSignIn) {
+                                            RedirectAfterSignIn.Home -> navigateToHome()
+                                            RedirectAfterSignIn.JoinCompany -> navigateToJoinCompany()
+                                            RedirectAfterSignIn.CreateCompany -> navigateToCreateCompany()
+                                        }
+                                        isLoading = false
                                     }
                                 },
                                 onError = { error -> messageBarState.addError(error) }
                             )
-                            isLoading = false
                         }.onFailure { error ->
                             if (error.message?.contains("A network error") == true) {
                                 messageBarState.addError("Internet connection error.")
