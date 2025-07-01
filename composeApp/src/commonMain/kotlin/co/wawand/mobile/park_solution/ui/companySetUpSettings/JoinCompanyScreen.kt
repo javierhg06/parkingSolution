@@ -1,4 +1,4 @@
-package co.wawand.mobile.park_solution.ui.companySettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -52,7 +52,7 @@ import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun JoinCompanyScreen(navigateToHome: () -> Unit) {
-    val viewModel = koinViewModel<CompanySettingsViewModel>()
+    val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 

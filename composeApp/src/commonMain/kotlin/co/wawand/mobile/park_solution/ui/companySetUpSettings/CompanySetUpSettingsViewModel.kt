@@ -1,4 +1,4 @@
-package co.wawand.mobile.park_solution.ui.companySettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,7 +20,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
-data class CompanySettingsState(
+data class CompanySetUpSettingsState(
     val companyName: String = "",
     val companyAddress: String = "",
     val wifiNetwork: String = "",
@@ -47,14 +47,14 @@ enum class CreateCompanyState {
     Form, Loading, Success, Error
 }
 
-class CompanySettingsViewModel(
+class CompanySetUpSettingsViewModel(
     private val companyConfigRepository: CompanyConfigRepository,
     private val parkingSpaceRepository: ParkingSpaceRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(CompanySettingsState())
-    val uiState: StateFlow<CompanySettingsState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CompanySetUpSettingsState())
+    val uiState: StateFlow<CompanySetUpSettingsState> = _uiState.asStateFlow()
 
     init {
         getExistingOwnerCompanyConfig()
@@ -126,7 +126,7 @@ class CompanySettingsViewModel(
             }
 
             val saveSuccess = try {
-                companyConfigRepository.saveCompanyConfig(config)
+                companyConfigRepository.saveCompanyConfigFromSetUp(config)
                 true
             } catch (e: Exception) {
                 setErrorState("Failed to save company config: ${e.message}")
@@ -301,84 +301,84 @@ class CompanySettingsViewModel(
     }
 
 
-    fun addCompanyConfig() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    errorMessage = "",
-                    createCompanyState = CreateCompanyState.Loading
-                )
-            }
-            try {
-                val ownerId = userRepository.getCurrentUserId()
-                val companyConfig = CompanyConfig(
-                    name = _uiState.value.companyName,
-                    address = _uiState.value.companyAddress,
-                    wifiNetwork = _uiState.value.wifiNetwork,
-                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
-                    ownerId = ownerId ?: "",
-                    latitude = _uiState.value.latitude.toDouble(),
-                    longitude = _uiState.value.longitude.toDouble(),
-                    accessCode = generateAccessCode()
-                )
-                println("---------->> companyConfig: $companyConfig")
-                companyConfigRepository.saveCompanyConfig(companyConfig)
-                _uiState.update {
-                    it.copy(
-                        existingConfig = companyConfig,
-                        createCompanyState = CreateCompanyState.Success,
-                    )
-                }
-            } catch (e: Exception) {
-                _uiState.update {
-                    it.copy(
-                        errorMessage = e.message ?: "\"Unknown error occurred\"",
-                        createCompanyState = CreateCompanyState.Error
-                    )
-                }
-            }
-        }
-    }
-
-    fun updateCompanyConfig() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    errorMessage = "",
-                    createCompanyState = CreateCompanyState.Loading
-                )
-            }
-            try {
-                val companyConfig = CompanyConfig(
-                    id = _uiState.value.existingConfig?.id ?: "",
-                    name = _uiState.value.companyName,
-                    address = _uiState.value.companyAddress,
-                    wifiNetwork = _uiState.value.wifiNetwork,
-                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
-                    ownerId = _uiState.value.existingConfig?.ownerId ?: "",
-                    latitude = _uiState.value.latitude.toDouble(),
-                    longitude = _uiState.value.longitude.toDouble(),
-                    accessCode = _uiState.value.existingConfig?.accessCode ?: "",
-                )
-                println("---------->> companyConfig: $companyConfig")
-                companyConfigRepository.updateCompanyConfig(companyConfig)
-                _uiState.update {
-                    it.copy(
-                        existingConfig = companyConfig,
-                        createCompanyState = CreateCompanyState.Success
-                    )
-                }
-            } catch (e: Exception) {
-                println("------------------>> updateCompanyConfig: 🔥 Firestore error: ${e.message}")
-                _uiState.update {
-                    it.copy(
-                        errorMessage = e.message ?: "Unknown error occurred",
-                        createCompanyState = CreateCompanyState.Error
-                    )
-                }
-            }
-        }
-    }
+//    fun addCompanyConfig() {
+//        viewModelScope.launch {
+//            _uiState.update {
+//                it.copy(
+//                    errorMessage = "",
+//                    createCompanyState = CreateCompanyState.Loading
+//                )
+//            }
+//            try {
+//                val ownerId = userRepository.getCurrentUserId()
+//                val companyConfig = CompanyConfig(
+//                    name = _uiState.value.companyName,
+//                    address = _uiState.value.companyAddress,
+//                    wifiNetwork = _uiState.value.wifiNetwork,
+//                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
+//                    ownerId = ownerId ?: "",
+//                    latitude = _uiState.value.latitude.toDouble(),
+//                    longitude = _uiState.value.longitude.toDouble(),
+//                    accessCode = generateAccessCode()
+//                )
+//                println("---------->> companyConfig: $companyConfig")
+//                companyConfigRepository.saveCompanyConfig(companyConfig)
+//                _uiState.update {
+//                    it.copy(
+//                        existingConfig = companyConfig,
+//                        createCompanyState = CreateCompanyState.Success,
+//                    )
+//                }
+//            } catch (e: Exception) {
+//                _uiState.update {
+//                    it.copy(
+//                        errorMessage = e.message ?: "\"Unknown error occurred\"",
+//                        createCompanyState = CreateCompanyState.Error
+//                    )
+//                }
+//            }
+//        }
+//    }
+//
+//    fun updateCompanyConfig() {
+//        viewModelScope.launch {
+//            _uiState.update {
+//                it.copy(
+//                    errorMessage = "",
+//                    createCompanyState = CreateCompanyState.Loading
+//                )
+//            }
+//            try {
+//                val companyConfig = CompanyConfig(
+//                    id = _uiState.value.existingConfig?.id ?: "",
+//                    name = _uiState.value.companyName,
+//                    address = _uiState.value.companyAddress,
+//                    wifiNetwork = _uiState.value.wifiNetwork,
+//                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
+//                    ownerId = _uiState.value.existingConfig?.ownerId ?: "",
+//                    latitude = _uiState.value.latitude.toDouble(),
+//                    longitude = _uiState.value.longitude.toDouble(),
+//                    accessCode = _uiState.value.existingConfig?.accessCode ?: "",
+//                )
+//                println("---------->> companyConfig: $companyConfig")
+//                companyConfigRepository.updateCompanyConfig(companyConfig)
+//                _uiState.update {
+//                    it.copy(
+//                        existingConfig = companyConfig,
+//                        createCompanyState = CreateCompanyState.Success
+//                    )
+//                }
+//            } catch (e: Exception) {
+//                println("------------------>> updateCompanyConfig: 🔥 Firestore error: ${e.message}")
+//                _uiState.update {
+//                    it.copy(
+//                        errorMessage = e.message ?: "Unknown error occurred",
+//                        createCompanyState = CreateCompanyState.Error
+//                    )
+//                }
+//            }
+//        }
+//    }
 
     fun isFormValid(): Boolean {
         return _uiState.value.companyName.isNotBlank() &&

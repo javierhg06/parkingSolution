@@ -1,4 +1,4 @@
-package co.wawand.mobile.park_solution.ui.companySettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,7 +66,7 @@ import org.koin.compose.viewmodel.koinViewModel
 fun CreateCompanyFlow(
     navigateToHome: () -> Unit = {},
 ) {
-    val viewModel = koinViewModel<CompanySettingsViewModel>()
+    val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
     val uiState by viewModel.uiState.collectAsState()
 
     when (uiState.createCompanyState) {
@@ -95,7 +95,7 @@ fun CreateCompanyFlow(
 }
 
 @Composable
-fun CreateCompanyScreen(viewModel: CompanySettingsViewModel, uiState: CompanySettingsState) {
+fun CreateCompanyScreen(viewModel: CompanySetUpSettingsViewModel, uiState: CompanySetUpSettingsState) {
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
@@ -163,8 +163,8 @@ private fun CompanyDescription() {
 
 @Composable
 private fun CompanyForm(
-    uiState: CompanySettingsState,
-    viewModel: CompanySettingsViewModel,
+    uiState: CompanySetUpSettingsState,
+    viewModel: CompanySetUpSettingsViewModel,
     focusManager: FocusManager
 ) {
     Column(

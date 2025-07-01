@@ -6,8 +6,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import co.wawand.mobile.park_solution.ui.MainScreen
 import co.wawand.mobile.park_solution.ui.auth.SignInScreen
-import co.wawand.mobile.park_solution.ui.companySettings.CreateCompanyFlow
-import co.wawand.mobile.park_solution.ui.companySettings.JoinCompanyScreen
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.CreateCompanyFlow
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.JoinCompanyScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
