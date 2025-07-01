@@ -14,10 +14,9 @@ class MainViewModel(private val userRepository: UserRepository) : ViewModel() {
         onError: (String) -> Unit
     ) {
         viewModelScope.launch {
-            val result = withContext(Dispatchers.IO){
-                userRepository.signOut()
-            }
-            if (result.isSuccess()){
+            val result = withContext(Dispatchers.IO) { userRepository.signOut() }
+
+            if (result.isSuccess()) {
                 onSuccess()
             } else if (result.isError()) {
                 onError(result.getErrorMessage())

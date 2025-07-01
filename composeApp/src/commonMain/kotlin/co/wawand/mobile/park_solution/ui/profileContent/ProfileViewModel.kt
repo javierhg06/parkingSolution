@@ -5,9 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.wawand.mobile.park_solution.shared.domain.model.CompanyConfig
 import co.wawand.mobile.park_solution.shared.domain.model.User
-import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
 import co.wawand.mobile.park_solution.shared.util.RequestState
 import kotlinx.coroutines.flow.SharingStarted

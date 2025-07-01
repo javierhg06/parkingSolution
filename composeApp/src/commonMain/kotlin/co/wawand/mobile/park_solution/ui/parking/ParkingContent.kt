@@ -1,6 +1,12 @@
 package co.wawand.mobile.park_solution.ui.parking
 
-import androidx.compose.foundation.background
+import MessageBarState
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +19,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -28,93 +33,58 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import co.wawand.mobile.park_solution.shared.DefaultTimeFormat
-import co.wawand.mobile.park_solution.ui.ParkingSpace
+import co.wawand.mobile.park_solution.shared.domain.model.ParkingSpaceWithUser
+import co.wawand.mobile.park_solution.shared.domain.model.User
+import co.wawand.mobile.park_solution.shared.util.displayResult
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.ArrowAltCircleRight
 import compose.icons.fontawesomeicons.solid.Bell
-import compose.icons.fontawesomeicons.solid.BusinessTime
+import compose.icons.fontawesomeicons.solid.CircleNotch
 import compose.icons.fontawesomeicons.solid.Clock
 import compose.icons.fontawesomeicons.solid.Directions
-import compose.icons.fontawesomeicons.solid.Info
 import compose.icons.fontawesomeicons.solid.Parking
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.format
-import kotlinx.datetime.toLocalDateTime
+import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun ParkingContent1(
-    parkingSpaces: List<ParkingSpace>,
-    currentUserSpace: Int,
-    onSpaceClicked: (Int) -> Unit,
-    onLeaveClicked: (Int) -> Unit
-) {
-    ParkingGrid(
-        spaces = parkingSpaces,
-        currentUserSpace = currentUserSpace,
-        onLeaveClicked = onLeaveClicked,
-        onSpaceClicked = onSpaceClicked
+fun ParkingContent(messageBarState: MessageBarState) {
+    val viewModel = koinViewModel<ParkingViewModel>()
+    val uiState by viewModel.uiState.collectAsState()
+    val parkingState = viewModel.parkingSpacesState
+
+    parkingState.displayResult(
+        onLoading = { viewModel.setLoadingState(true) },
+        onSuccess = { state ->
+            viewModel.setLoadingState(false)
+            viewModel.setParkingSpaces(state)
+        },
+        onError = { message ->
+            messageBarState.addError(message)
+            viewModel.setLoadingState(false)
+        },
     )
-}
 
-@Composable
-fun ParkingHeader(
-    modifier: Modifier = Modifier,
-    freeSpaces: Int,
-    totalSpaces: Int,
-) {
-    Column(modifier = modifier.fillMaxWidth().padding(16.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Park Solution",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Connected",
-                color = Color.White,
-                fontSize = 14.sp
-            )
-        }
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = Clock.System.now()
-                    .toLocalDateTime(TimeZone.currentSystemDefault()).time.format(DefaultTimeFormat),
-                color = Color.White,
-                fontSize = 16.sp
-            )
-
-            Text(
-                text = if (freeSpaces == 0) "No spaces available" else "$freeSpaces of $totalSpaces spaces available",
-                color = Color.White,
-                fontSize = 14.sp
-            )
-        }
-    }
+    ParkingGrid(
+        spaces = uiState.parkingSpaces,
+        currentUser = uiState.currentUser,
+        isLoading = uiState.isLoading,
+        messageBarState = messageBarState,
+        currentUserSpace = uiState.parkingSpaces.indexOfFirst { it.user == uiState.currentUser } + 1,
+        onSpaceClicked = viewModel::toggleCompanyParkingSpace
+    )
 }
 
 @Composable
@@ -169,10 +139,12 @@ fun CurrentParkingStatus(
 
 @Composable
 fun ParkingGrid(
-    spaces: List<ParkingSpace>,
+    spaces: List<ParkingSpaceWithUser>,
+    currentUser: User?,
     currentUserSpace: Int,
-    onSpaceClicked: (Int) -> Unit,
-    onLeaveClicked: (Int) -> Unit
+    isLoading: Boolean,
+    messageBarState: MessageBarState,
+    onSpaceClicked: (parkingSpace: ParkingSpaceWithUser, onError: (String) -> Unit) -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(2),
@@ -183,23 +155,64 @@ fun ParkingGrid(
             // Current parking status
             CurrentParkingStatus(
                 currentSpace = currentUserSpace,
-                onLeaveClicked = { onLeaveClicked(currentUserSpace) }
+                onLeaveClicked = {
+                    onSpaceClicked(
+                        spaces[currentUserSpace - 1],
+                    ) { message ->
+                        messageBarState.addError(message)
+                    }
+                }
             )
         }
 
         item(span = { GridItemSpan(maxLineSpan) }) {
-            Text(
-                text = "Parking Spaces",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Parking Spaces",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+
+                if (isLoading) {
+                    val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+                    val rotation by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = infiniteRepeatable(
+                            animation = tween(durationMillis = 1000, easing = LinearEasing),
+                            repeatMode = RepeatMode.Restart
+                        ),
+                        label = "spin"
+                    )
+
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.CircleNotch,
+                        contentDescription = "Loading",
+                        modifier = Modifier
+                            .size(20.dp)
+                            .rotate(rotation),
+                        tint = Color.Red
+                    )
+                }
+            }
         }
 
-        items(spaces) { space ->
+        itemsIndexed(spaces) { index, space ->
             ParkingSpaceCard(
                 space = space,
-                onClick = { onSpaceClicked(space.id) }
+                currentUser = currentUser,
+                spaceNumber = index + 1,
+                onClick = {
+                    onSpaceClicked(
+                        space
+                    ) { message ->
+                        messageBarState.addError(message)
+                    }
+                }
             )
         }
     }
@@ -207,24 +220,26 @@ fun ParkingGrid(
 
 @Composable
 fun ParkingSpaceCard(
-    space: ParkingSpace,
+    space: ParkingSpaceWithUser,
+    spaceNumber: Int,
+    currentUser: User?,
     onClick: () -> Unit
 ) {
     val backgroundColor = when {
-        space.isCurrentUser -> Color(0xFFE8F5E8)
-        space.isOccupied -> Color(0xFFFFEBEE)
+        space.user == currentUser -> Color(0xFFE8F5E8)
+        space.parkingSpace.occupied -> Color(0xFFFFEBEE)
         else -> Color(0xFFF5F5F5)
     }
 
     val borderColor = when {
-        space.isCurrentUser -> Color(0xFF4CAF50)
-        space.isOccupied -> Color(0xFFE57373)
+        space.user == currentUser -> Color(0xFF4CAF50)
+        space.parkingSpace.occupied -> Color(0xFFE57373)
         else -> Color(0xFFE0E0E0)
     }
 
     val iconColor = when {
-        space.isCurrentUser -> Color(0xFF4CAF50)
-        space.isOccupied -> Color(0xFFE57373)
+        space.user == currentUser -> Color(0xFF4CAF50)
+        space.parkingSpace.occupied -> Color(0xFFE57373)
         else -> Color(0xFF9E9E9E)
     }
 
@@ -232,9 +247,9 @@ fun ParkingSpaceCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(120.dp)
-            .clickable(enabled = !space.isOccupied || space.isCurrentUser) { onClick() }
+            .clickable(enabled = !space.parkingSpace.occupied || space.user == currentUser) { onClick() }
             .border(
-                width = if (space.isCurrentUser) 2.dp else 1.dp,
+                width = if (space.user == currentUser) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(12.dp)
             ),
@@ -258,7 +273,7 @@ fun ParkingSpaceCard(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Space ${space.id}",
+                text = "Space $spaceNumber",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = Color.Black
@@ -266,8 +281,8 @@ fun ParkingSpaceCard(
 
             Text(
                 text = when {
-                    space.isCurrentUser -> "You"
-                    space.isOccupied -> space.occupantName ?: ""
+                    space.user == currentUser -> "You"
+                    space.parkingSpace.occupied -> space.user?.name ?: ""
                     else -> "Available"
                 },
                 fontSize = 12.sp,
@@ -275,15 +290,15 @@ fun ParkingSpaceCard(
                 textAlign = TextAlign.Center
             )
 
-            if (space.isOccupied && space.occupiedSince != null) {
+            if (space.parkingSpace.occupied) {
                 Text(
-                    text = "Since ${space.occupiedSince}",
+                    text = "Since ${space.parkingSpace.occupiedAt}",
                     fontSize = 10.sp,
                     color = Color.Gray
                 )
             }
 
-            if (space.isOccupied && !space.isCurrentUser) {
+            if (space.parkingSpace.occupied && space.user != currentUser) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "💬",
@@ -295,37 +310,6 @@ fun ParkingSpaceCard(
 }
 
 //////////////////////////////
-
-@Composable
-fun ParkingContent(
-    parkingSpaces: List<ParkingSpace>,
-    currentUserSpace: Int,
-    onSpaceClicked: (Int) -> Unit,
-    onLeaveClicked: (Int) -> Unit,
-    isLoading: Boolean = false,
-    hasCompany: Boolean = true,
-    currentLanguage: String = "en" // "en" or "es"
-) {
-    when {
-        isLoading -> {
-            LoadingState(currentLanguage = currentLanguage)
-        }
-        !hasCompany -> {
-            NoCompanyState(currentLanguage = currentLanguage)
-        }
-        parkingSpaces.isEmpty() -> {
-            EmptyParkingState(currentLanguage = currentLanguage)
-        }
-        else -> {
-            ParkingGrid(
-                spaces = parkingSpaces,
-                currentUserSpace = currentUserSpace,
-                onLeaveClicked = onLeaveClicked,
-                onSpaceClicked = onSpaceClicked
-            )
-        }
-    }
-}
 
 @Composable
 private fun LoadingState(
@@ -354,82 +338,7 @@ private fun LoadingState(
 }
 
 @Composable
-private fun NoCompanyState(
-    currentLanguage: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            // Icon
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.BusinessTime,//Icons.Default.Business,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-
-            // Title
-            Text(
-                text = if (currentLanguage == "es") "Sin Empresa Asignada" else "No Company Assigned",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            // Description
-            Text(
-                text = if (currentLanguage == "es")
-                    "No estás asignado a ninguna empresa. Contacta a tu administrador para obtener acceso a los espacios de estacionamiento."
-                else
-                    "You're not assigned to any company. Contact your administrator to get access to parking spaces.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
-            )
-
-            // Support Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.Info,//Icons.Default.Info,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Text(
-                        text = if (currentLanguage == "es")
-                            "Necesitas ayuda? Contacta al soporte técnico."
-                        else
-                            "Need help? Contact technical support.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 private fun EmptyParkingState(
-    currentLanguage: String,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -451,7 +360,7 @@ private fun EmptyParkingState(
 
             // Title
             Text(
-                text = if (currentLanguage == "es") "Sin Espacios Disponibles" else "No Parking Spaces",
+                text = "No Parking Spaces",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -459,10 +368,7 @@ private fun EmptyParkingState(
 
             // Description
             Text(
-                text = if (currentLanguage == "es")
-                    "Tu empresa aún no ha configurado espacios de estacionamiento. Los espacios aparecerán aquí una vez que sean añadidos por el administrador."
-                else
-                    "Your company hasn't set up parking spaces yet. Spaces will appear here once they're added by the administrator.",
+                text = "Your company hasn't set up parking spaces yet. Spaces will appear here once they're added by the administrator.",
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -475,22 +381,14 @@ private fun EmptyParkingState(
             ) {
                 StatusCard(
                     icon = FontAwesomeIcons.Solid.Clock,
-                    title = if (currentLanguage == "es") "En Configuración" else "In Setup",
-                    description = if (currentLanguage == "es")
-                        "Los espacios se están configurando"
-                    else
-                        "Spaces are being configured",
-                    currentLanguage = currentLanguage
+                    title = "In Setup",
+                    description = "Spaces are being configured",
                 )
 
                 StatusCard(
                     icon = FontAwesomeIcons.Solid.Bell,//Icons.Default.Notifications,
-                    title = if (currentLanguage == "es") "Te Notificaremos" else "We'll Notify You",
-                    description = if (currentLanguage == "es")
-                        "Recibirás una notificación cuando estén listos"
-                    else
-                        "You'll get notified when they're ready",
-                    currentLanguage = currentLanguage
+                    title = "We'll Notify You",
+                    description = "You'll get notified when they're ready",
                 )
             }
         }
@@ -502,7 +400,6 @@ private fun StatusCard(
     icon: ImageVector,
     title: String,
     description: String,
-    currentLanguage: String,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -533,165 +430,6 @@ private fun StatusCard(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-        }
-    }
-}
-
-// Alternative version with refresh functionality
-@Composable
-fun ParkingContentWithRefresh(
-    parkingSpaces: List<ParkingSpace>,
-    currentUserSpace: Int,
-    onSpaceClicked: (Int) -> Unit,
-    onLeaveClicked: (Int) -> Unit,
-    isLoading: Boolean = false,
-    hasCompany: Boolean = true,
-    currentLanguage: String = "en",
-    onRefresh: () -> Unit = {}
-) {
-    when {
-        isLoading -> {
-            LoadingState(currentLanguage = currentLanguage)
-        }
-        !hasCompany -> {
-            NoCompanyStateWithRefresh(
-                currentLanguage = currentLanguage,
-                onRefresh = onRefresh
-            )
-        }
-        parkingSpaces.isEmpty() -> {
-            EmptyParkingStateWithRefresh(
-                currentLanguage = currentLanguage,
-                onRefresh = onRefresh
-            )
-        }
-        else -> {
-            ParkingGrid(
-                spaces = parkingSpaces,
-                currentUserSpace = currentUserSpace,
-                onLeaveClicked = onLeaveClicked,
-                onSpaceClicked = onSpaceClicked
-            )
-        }
-    }
-}
-
-@Composable
-private fun NoCompanyStateWithRefresh(
-    currentLanguage: String,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            // Icon
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.BusinessTime,//Icons.Default.Business,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-
-            // Title
-            Text(
-                text = if (currentLanguage == "es") "Sin Empresa Asignada" else "No Company Assigned",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            // Description
-            Text(
-                text = if (currentLanguage == "es")
-                    "No estás asignado a ninguna empresa. Contacta a tu administrador para obtener acceso a los espacios de estacionamiento."
-                else
-                    "You're not assigned to any company. Contact your administrator to get access to parking spaces.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
-            )
-
-            // Refresh Button
-            OutlinedButton(
-                onClick = onRefresh,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.ArrowAltCircleRight,//Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (currentLanguage == "es") "Actualizar" else "Refresh")
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyParkingStateWithRefresh(
-    currentLanguage: String,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(32.dp)
-        ) {
-            // Icon
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.Parking,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-
-            // Title
-            Text(
-                text = if (currentLanguage == "es") "Sin Espacios Disponibles" else "No Parking Spaces",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            // Description
-            Text(
-                text = if (currentLanguage == "es")
-                    "Tu empresa aún no ha configurado espacios de estacionamiento. Toca actualizar para verificar si ya están disponibles."
-                else
-                    "Your company hasn't set up parking spaces yet. Tap refresh to check if they're now available.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
-            )
-
-            // Refresh Button
-            Button(
-                onClick = onRefresh,
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.ArrowAltCircleRight,//Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(if (currentLanguage == "es") "Verificar Espacios" else "Check for Spaces")
             }
         }
     }

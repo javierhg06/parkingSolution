@@ -1,5 +1,6 @@
 package co.wawand.mobile.park_solution.ui.companySettings
 
+import MessageBarState
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,7 +38,7 @@ import kotlinx.datetime.format.char
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
-fun CompanySettingsContent() {
+fun CompanySettingsContent(messageBarState: MessageBarState) {
     val viewModel = koinViewModel<CompanySettingsViewModel>()
     val uiState by viewModel.uiState.collectAsState()
 

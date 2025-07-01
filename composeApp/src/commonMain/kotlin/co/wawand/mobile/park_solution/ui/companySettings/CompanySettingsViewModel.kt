@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.wawand.mobile.park_solution.shared.DefaultTimeFormat
 import co.wawand.mobile.park_solution.shared.domain.model.CompanyConfig
+import co.wawand.mobile.park_solution.shared.domain.model.ParkingSpace
 import co.wawand.mobile.park_solution.shared.domain.model.User
 import co.wawand.mobile.park_solution.shared.domain.model.WorkingHours
 import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepository
+import co.wawand.mobile.park_solution.shared.domain.repository.ParkingSpaceRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.format
 
@@ -46,6 +49,7 @@ enum class CreateCompanyState {
 
 class CompanySettingsViewModel(
     private val companyConfigRepository: CompanyConfigRepository,
+    private val parkingSpaceRepository: ParkingSpaceRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
 
@@ -130,6 +134,22 @@ class CompanySettingsViewModel(
             }
 
             if (!saveSuccess) return@launch
+
+            val saveCompanySpacesSuccess = try {
+                for (i in 1..config.totalParkingSpaces) {
+                    parkingSpaceRepository.saveCompanyParkingSpace(
+                        ParkingSpace(
+                            occupiedBy = null,
+                            companyId = config.id,
+                            createdAt = Clock.System.now(),
+                        )
+                    )
+                }
+                true
+            } catch (e: Exception) {
+                setErrorState("Failed to save company spaces: ${e.message}")
+                false
+            }
 
             val updateSuccess = try {
                 userRepository.updateUser(currentUser.copy(companyId = config.id))
@@ -244,8 +264,6 @@ class CompanySettingsViewModel(
     fun isAccessCodeValid(accessCode: String): Boolean {
         return accessCode.length == 6
     }
-
-
     // Until here ================================================================
 
 

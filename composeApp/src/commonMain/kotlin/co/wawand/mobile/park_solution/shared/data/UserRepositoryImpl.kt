@@ -21,12 +21,6 @@ class UserRepositoryImpl : UserRepository {
     override fun getUserById(id: String) = flow {
         val document = Firebase.firestore.collection("users").document(id).get()
         emit(document.data<User>())
-        /*
-            Get the information from cache storage
-             Firebase.firestore.collection("users").document(id).snapshots.collect { documentSnapshot ->
-                 emit(documentSnapshot.data<User>())
-             }
-             */
     }
 
     override fun isInSuperUserList(email: String) = flow {
@@ -35,7 +29,6 @@ class UserRepositoryImpl : UserRepository {
             .limit(1)
             .get()
 
-        println("---------->> isInSuperUserList: ${querySnapshot.documents.size}") //querySnapshot.documents.size
         emit(querySnapshot.documents.isNotEmpty())
     }
 

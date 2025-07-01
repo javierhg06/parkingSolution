@@ -27,7 +27,7 @@ class CompanyConfigRepositoryImpl : CompanyConfigRepository {
     override fun getCompanyByOwnerId(ownerId: String) = flow {
         val querySnapshot = Firebase.firestore
             .collection("company_configs")
-            .where { "ownerId" equalTo  ownerId }
+            .where { "ownerId" equalTo ownerId }
             .limit(1)
             .get()
 
@@ -41,7 +41,7 @@ class CompanyConfigRepositoryImpl : CompanyConfigRepository {
     override fun getCompanyByAccessCode(accessCode: String) = flow {
         val querySnapshot = Firebase.firestore
             .collection("company_configs")
-            .where { "accessCode" equalTo  accessCode }
+            .where { "accessCode" equalTo accessCode }
             .limit(1)
             .get()
 
