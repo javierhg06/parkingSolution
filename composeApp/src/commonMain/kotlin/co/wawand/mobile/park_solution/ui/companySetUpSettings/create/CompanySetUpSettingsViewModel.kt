@@ -1,12 +1,10 @@
-package co.wawand.mobile.park_solution.ui.companySetUpSettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings.create
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.wawand.mobile.park_solution.shared.DefaultTimeFormat
 import co.wawand.mobile.park_solution.shared.domain.model.CompanyConfig
 import co.wawand.mobile.park_solution.shared.domain.model.ParkingSpace
 import co.wawand.mobile.park_solution.shared.domain.model.User
-import co.wawand.mobile.park_solution.shared.domain.model.WorkingHours
 import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.ParkingSpaceRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
@@ -17,8 +15,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.format
 
 data class CompanySetUpSettingsState(
     val companyName: String = "",
@@ -26,19 +22,9 @@ data class CompanySetUpSettingsState(
     val wifiNetwork: String = "",
     val totalParkingSpaces: Int = 2,
     val existingConfig: CompanyConfig? = null,
-    val workingHours: WorkingHours = WorkingHours(
-        start = LocalTime(6, 0).format(DefaultTimeFormat),
-        end = LocalTime(17, 0).format(DefaultTimeFormat)
-    ),
 
     val createCompanyState: CreateCompanyState = CreateCompanyState.Form,
     val errorMessage: String = "",
-
-    //join company state
-    val accessCode: String = "",
-    val isJoiningCompany: Boolean = false,
-    val joinedCompanyErrorMessage: String = "",
-    val redirectToHome: Boolean = false
 )
 
 enum class CreateCompanyState {
@@ -74,10 +60,6 @@ class CompanySetUpSettingsViewModel(
         _uiState.update { it.copy(totalParkingSpaces = spaces) }
     }
 
-    fun onWorkingHoursChanged(start: String, end: String) {
-        _uiState.update { it.copy(workingHours = WorkingHours(start, end)) }
-    }
-
     private fun generateAccessCode(): String {
         return (100000..999999).random().toString()
     }
@@ -91,8 +73,6 @@ class CompanySetUpSettingsViewModel(
         }
     }
 
-
-    //============ save company config for the current user==========================
     fun saveCompanyConfigAndUpdateCurrentUser() {
         viewModelScope.launch {
             _uiState.update {
@@ -108,15 +88,10 @@ class CompanySetUpSettingsViewModel(
                 return@launch
             }
 
-            val config = try {
-                createCompanyConfig(currentUser.id)
-            } catch (e: Exception) {
-                setErrorState("Invalid company data: ${currentUser.id} - ${e.message}")
-                return@launch
-            }
+            val companyConfig = buildCompanyConfig(currentUser.id)
 
             val saveSuccess = try {
-                companyConfigRepository.saveCompanyConfigFromSetUp(config)
+                companyConfigRepository.saveCompanyConfigFromSetUp(companyConfig)
                 true
             } catch (e: Exception) {
                 setErrorState("Failed to save company config: ${e.message}")
@@ -125,24 +100,22 @@ class CompanySetUpSettingsViewModel(
 
             if (!saveSuccess) return@launch
 
-            val saveCompanySpacesSuccess = try {
-                for (i in 1..config.totalParkingSpaces) {
+            try {
+                for (i in 1..companyConfig.totalParkingSpaces) {
                     parkingSpaceRepository.saveCompanyParkingSpace(
                         ParkingSpace(
                             occupiedBy = null,
-                            companyId = config.id,
+                            companyId = companyConfig.id,
                             createdAt = Clock.System.now(),
                         )
                     )
                 }
-                true
             } catch (e: Exception) {
                 setErrorState("Failed to save company spaces: ${e.message}")
-                false
             }
 
             val updateSuccess = try {
-                userRepository.updateUser(currentUser.copy(companyId = config.id))
+                userRepository.updateUser(currentUser.copy(companyId = companyConfig.id))
                 true
             } catch (e: Exception) {
                 setErrorState("Failed to update user: ${e.message}")
@@ -152,7 +125,7 @@ class CompanySetUpSettingsViewModel(
             if (updateSuccess) {
                 _uiState.update {
                     it.copy(
-                        existingConfig = config,
+                        existingConfig = companyConfig,
                         createCompanyState = CreateCompanyState.Success
                     )
                 }
@@ -170,18 +143,15 @@ class CompanySetUpSettingsViewModel(
         }
     }
 
-    private fun createCompanyConfig(ownerId: String): CompanyConfig {
-        val state = _uiState.value
-        val pan = CompanyConfig(
-            name = state.companyName,
-            address = state.companyAddress,
-            wifiNetwork = state.wifiNetwork,
-            totalParkingSpaces = state.totalParkingSpaces,
+    private fun buildCompanyConfig(ownerId: String): CompanyConfig {
+        return CompanyConfig(
+            name = _uiState.value.companyName,
+            address = _uiState.value.companyAddress,
+            wifiNetwork = _uiState.value.wifiNetwork,
+            totalParkingSpaces = _uiState.value.totalParkingSpaces,
             ownerId = ownerId,
             accessCode = generateAccessCode()
         )
-        println("----------->> pan: $pan")
-        return pan
     }
 
     private fun setErrorState(message: String) {
@@ -192,68 +162,6 @@ class CompanySetUpSettingsViewModel(
             )
         }
     }
-    // Until here ==================================================================
-
-    // ================= Join Company ==============================================
-
-    fun onJoinCompanyClick() {
-        viewModelScope.launch {
-            _uiState.update {
-                it.copy(isJoiningCompany = true, joinedCompanyErrorMessage = "")
-            }
-
-            val company = findCompanyByAccessCode(_uiState.value.accessCode)
-            if (company == null) {
-                setJoinError("Company not found")
-                return@launch
-            }
-
-            val currentUser = getCurrentUserOrNull()
-            if (currentUser == null) {
-                setJoinError("Something went wrong - current user not found")
-                return@launch
-            }
-
-            try {
-                userRepository.saveUser(currentUser.copy(companyId = company.id))
-                _uiState.update {
-                    it.copy(
-                        isJoiningCompany = false,
-                        joinedCompanyErrorMessage = "",
-                        redirectToHome = true
-                    )
-                }
-            } catch (e: Exception) {
-                setJoinError("Error joining company: ${e.message}")
-            }
-        }
-    }
-
-
-    private suspend fun findCompanyByAccessCode(code: String): CompanyConfig? {
-        return try {
-            companyConfigRepository.getCompanyByAccessCode(code).firstOrNull()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    private fun setJoinError(message: String) {
-        _uiState.update {
-            it.copy(isJoiningCompany = false, joinedCompanyErrorMessage = message)
-        }
-    }
-
-
-    fun onAccessCodeChanged(accessCode: String) {
-        _uiState.update { it.copy(accessCode = accessCode, joinedCompanyErrorMessage = "") }
-    }
-
-    fun isAccessCodeValid(accessCode: String): Boolean {
-        return accessCode.length == 6
-    }
-    // Until here ================================================================
-
 
     private fun getExistingOwnerCompanyConfig() {
         viewModelScope.launch {
@@ -270,6 +178,7 @@ class CompanySetUpSettingsViewModel(
                                 it.copy(
                                     existingConfig = companyConfig,
                                     companyName = companyConfig.name,
+                                    companyAddress = companyConfig.address,
                                     wifiNetwork = companyConfig.wifiNetwork,
                                     totalParkingSpaces = companyConfig.totalParkingSpaces,
                                 )

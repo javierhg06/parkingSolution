@@ -8,9 +8,10 @@ import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepo
 import co.wawand.mobile.park_solution.shared.domain.repository.ParkingSpaceRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
 import co.wawand.mobile.park_solution.ui.auth.SignInViewModel
-import co.wawand.mobile.park_solution.ui.main.MainViewModel
-import co.wawand.mobile.park_solution.ui.companySetUpSettings.CompanySetUpSettingsViewModel
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.create.CompanySetUpSettingsViewModel
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.join.JoinCompanyViewModel
 import co.wawand.mobile.park_solution.ui.companySettings.CompanyConfigViewModel
+import co.wawand.mobile.park_solution.ui.main.MainViewModel
 import co.wawand.mobile.park_solution.ui.parking.ParkingViewModel
 import co.wawand.mobile.park_solution.ui.profile.UserProfileViewModel
 import org.koin.core.KoinApplication
@@ -29,6 +30,7 @@ val sharedModule = module {
     viewModelOf(::ParkingViewModel)
     viewModelOf(::CompanyConfigViewModel)
     viewModelOf(::CompanySetUpSettingsViewModel)
+    viewModelOf(::JoinCompanyViewModel)
     viewModelOf(::AppViewModel)
 }
 

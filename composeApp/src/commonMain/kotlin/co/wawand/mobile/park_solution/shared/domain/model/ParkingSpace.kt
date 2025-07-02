@@ -1,6 +1,5 @@
 package co.wawand.mobile.park_solution.shared.domain.model
 
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
 import kotlin.uuid.Uuid
@@ -12,8 +11,6 @@ data class ParkingSpace(
     val occupied: Boolean = false,
     val occupiedBy: String?,
     val occupiedAt: Instant? = null,
-    val reservedBy: String? = null,
-    val reservedUntil: String? = null,
     val companyId: String,
     val createdAt: Instant
 )

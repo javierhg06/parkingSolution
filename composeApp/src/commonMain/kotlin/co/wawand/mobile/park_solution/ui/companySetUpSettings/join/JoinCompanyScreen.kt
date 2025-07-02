@@ -1,5 +1,6 @@
-package co.wawand.mobile.park_solution.ui.companySetUpSettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings.join
 
+import ContentWithMessageBar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -60,25 +61,27 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.wawand.mobile.park_solution.ui.main.MainViewModel
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ArrowRight
 import compose.icons.fontawesomeicons.solid.ExclamationTriangle
-import compose.icons.fontawesomeicons.solid.Headset
 import compose.icons.fontawesomeicons.solid.Key
-import compose.icons.fontawesomeicons.solid.QuestionCircle
 import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Users
 import org.koin.compose.viewmodel.koinViewModel
+import rememberMessageBarState
 
 @Composable
 fun JoinCompanyScreen(
     navigateToHome: () -> Unit,
-    onLogout: () -> Unit = {} // Add logout callback
+    navigateToSignIn: () -> Unit = {}
 ) {
-    val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
+    val mainViewModel = koinViewModel<MainViewModel>()
+    val viewModel = koinViewModel<JoinCompanyViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
+    val messageBarState = rememberMessageBarState()
 
     // Animation states
     var visible by remember { mutableStateOf(false) }
@@ -116,59 +119,74 @@ fun JoinCompanyScreen(
                     )
                 )
         ) {
-            Column(
+            ContentWithMessageBar(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 24.dp)
-                    .verticalScroll(scrollState)
-                    .graphicsLayer {
-                        translationY = animatedOffset.toPx()
-                        alpha = animatedAlpha
-                    },
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(padding),
+                messageBarState = messageBarState,
+                errorMaxLines = 2,
+                errorContainerColor = Color(0xFFDC2626),
+                errorContentColor = Color.White,
+                contentBackgroundColor = Color.Transparent
             ) {
-                Spacer(Modifier.height(16.dp))
-                // Sign Out button at the top
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    TextButton(
-                        onClick = {
-                            // Add sign out logic here - you can pass this as a parameter to the composable
-                            // For now, it's just a placeholder
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = 24.dp)
+                        .verticalScroll(scrollState)
+                        .graphicsLayer {
+                            translationY = animatedOffset.toPx()
+                            alpha = animatedAlpha
                         },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = Color(0xFF64748B)
-                        )
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(Modifier.height(16.dp))
+                    // Sign Out button at the top
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Icon(
-                            imageVector = FontAwesomeIcons.Solid.SignOutAlt,
-                            contentDescription = "Sign Out",
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "Sign Out",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
-                        )
+                        TextButton(
+                            onClick = {
+                                mainViewModel.signOut(
+                                    onSuccess = {
+                                        navigateToSignIn()
+                                    },
+                                    onError = { message -> messageBarState.addError(message) }
+                                )
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = Color(0xFF64748B)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                                contentDescription = "Sign Out",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Sign Out",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
-                }
 
-                EnhancedCompanyIcon()
-                EnhancedTitleSection()
-                Spacer(Modifier.height(48.dp))
-                EnhancedAccessCodeSection(
-                    code = uiState.accessCode,
-                    onCodeChange = viewModel::onAccessCodeChanged,
-                    errorMessage = uiState.joinedCompanyErrorMessage,
-                    isLoading = uiState.isJoiningCompany
-                )
-                Spacer(Modifier.height(32.dp))
-                EnhancedJoinCompanyButton(uiState.accessCode, viewModel::onJoinCompanyClick)
-                Spacer(Modifier.height(24.dp))
+                    EnhancedCompanyIcon()
+                    EnhancedTitleSection()
+                    Spacer(Modifier.height(48.dp))
+                    EnhancedAccessCodeSection(
+                        code = uiState.accessCode,
+                        onCodeChange = viewModel::onAccessCodeChanged,
+                        errorMessage = uiState.joinedCompanyErrorMessage,
+                        isLoading = uiState.isJoiningCompany
+                    )
+                    Spacer(Modifier.height(32.dp))
+                    EnhancedJoinCompanyButton(uiState.accessCode, viewModel::onJoinCompanyClick)
+                    Spacer(Modifier.height(24.dp))
+                }
             }
         }
     }

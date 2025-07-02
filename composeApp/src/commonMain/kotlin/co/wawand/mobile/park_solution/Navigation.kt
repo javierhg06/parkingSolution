@@ -4,10 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import co.wawand.mobile.park_solution.ui.auth.SignInScreen
 import co.wawand.mobile.park_solution.ui.auth.SignInScreenRedesigned
-import co.wawand.mobile.park_solution.ui.companySetUpSettings.CreateCompanyFlow
-import co.wawand.mobile.park_solution.ui.companySetUpSettings.JoinCompanyScreen
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.create.CreateCompanyFlow
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.join.JoinCompanyScreen
 import co.wawand.mobile.park_solution.ui.main.MainScreen
 import kotlinx.serialization.Serializable
 
@@ -57,6 +56,11 @@ fun Navigation(startDestination: Screen = Screen.SignInScreen) {
                     navController.navigate(Screen.MainScreen) {
                         popUpTo<Screen.SignInScreen> { inclusive = true }
                     }
+                },
+                navigateToSignIn = {
+                    navController.navigate(Screen.SignInScreen) {
+                        popUpTo<Screen.MainScreen> { inclusive = true }
+                    }
                 }
             )
         }
@@ -66,6 +70,11 @@ fun Navigation(startDestination: Screen = Screen.SignInScreen) {
                 navigateToHome = {
                     navController.navigate(Screen.MainScreen) {
                         popUpTo<Screen.SignInScreen> { inclusive = true }
+                    }
+                },
+                navigateToSignIn = {
+                    navController.navigate(Screen.SignInScreen) {
+                        popUpTo<Screen.MainScreen> { inclusive = true }
                     }
                 }
             )

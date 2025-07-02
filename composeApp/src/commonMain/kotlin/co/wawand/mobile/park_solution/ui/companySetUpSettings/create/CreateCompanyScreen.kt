@@ -1,5 +1,6 @@
-package co.wawand.mobile.park_solution.ui.companySetUpSettings
+package co.wawand.mobile.park_solution.ui.companySetUpSettings.create
 
+import ContentWithMessageBar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,6 +49,7 @@ import androidx.compose.ui.unit.sp
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.ErrorScreen
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.LoadingScreen
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.SuccessScreen
+import co.wawand.mobile.park_solution.ui.main.MainViewModel
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ArrowRight
@@ -60,18 +62,20 @@ import compose.icons.fontawesomeicons.solid.Plus
 import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Wifi
 import org.koin.compose.viewmodel.koinViewModel
+import rememberMessageBarState
 
 
 @Composable
 fun CreateCompanyFlow(
     navigateToHome: () -> Unit = {},
+    navigateToSignIn: () -> Unit = {}
 ) {
     val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
     val uiState by viewModel.uiState.collectAsState()
 
     when (uiState.createCompanyState) {
         CreateCompanyState.Form -> {
-            CreateCompanyScreen(viewModel, uiState)
+            CreateCompanyScreen(viewModel, uiState, navigateToSignIn)
         }
 
         CreateCompanyState.Loading -> {
@@ -97,65 +101,81 @@ fun CreateCompanyFlow(
 @Composable
 private fun CreateCompanyScreen(
     viewModel: CompanySetUpSettingsViewModel,
-    uiState: CompanySetUpSettingsState
+    uiState: CompanySetUpSettingsState,
+    navigateToSignIn: () -> Unit,
 ) {
+    val mainViewModel = koinViewModel<MainViewModel>()
+    val messageBarState = rememberMessageBarState()
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
     Scaffold(
         containerColor = Color(0xFFF8FAFC)
     ) {
-        Column(
+        ContentWithMessageBar(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 24.dp)
-                .padding(
-                    top = it.calculateTopPadding() + 16.dp,
-                    bottom = it.calculateBottomPadding() + 16.dp
-                )
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(it),
+            messageBarState = messageBarState,
+            errorMaxLines = 2,
+            errorContainerColor = Color(0xFFDC2626),
+            errorContentColor = Color.White,
+            contentBackgroundColor = Color.Transparent
         ) {
-            Spacer(Modifier.height(16.dp))
-            // Sign Out button at the top
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+                    .padding(
+                        top = it.calculateTopPadding() + 16.dp,
+                        bottom = it.calculateBottomPadding() + 16.dp
+                    )
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                TextButton(
-                    onClick = {
-                        // Add sign out logic here - you can pass this as a parameter to the composable
-                        // For now, it's just a placeholder
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = Color(0xFF64748B)
-                    )
+                Spacer(Modifier.height(16.dp))
+                // Sign Out button at the top
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.SignOutAlt,
-                        contentDescription = "Sign Out",
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Sign Out",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    TextButton(
+                        onClick = {
+                            mainViewModel.signOut(
+                                onSuccess = navigateToSignIn,
+                                onError = { message -> messageBarState.addError(message) }
+                            )
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF64748B)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                            contentDescription = "Sign Out",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Sign Out",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
-            }
 
-            CompanyHeader()
-            Spacer(Modifier.height(32.dp))
-            CompanyForm(uiState, viewModel, focusManager)
-            Spacer(Modifier.height(24.dp))
-            AccessCodeInfo()
-            Spacer(Modifier.height(32.dp))
-            CreateCompanyButton(
-                onClick = viewModel::saveCompanyConfigAndUpdateCurrentUser,
-                enabled = viewModel.isFormValid()
-            )
-            Spacer(Modifier.height(24.dp))
+                CompanyHeader()
+                Spacer(Modifier.height(32.dp))
+                CompanyForm(uiState, viewModel, focusManager)
+                Spacer(Modifier.height(24.dp))
+                AccessCodeInfo()
+                Spacer(Modifier.height(32.dp))
+                CreateCompanyButton(
+                    onClick = viewModel::saveCompanyConfigAndUpdateCurrentUser,
+                    enabled = viewModel.isFormValid()
+                )
+                Spacer(Modifier.height(24.dp))
+            }
         }
     }
 }
@@ -223,16 +243,6 @@ private fun CompanyForm(
         )
 
         LabeledTextField(
-            label = "WiFi Network",
-            value = uiState.wifiNetwork,
-            onValueChange = viewModel::onWifiSSIDChanged,
-            placeholder = "Network name (optional)",
-            icon = FontAwesomeIcons.Solid.Wifi,
-            imeAction = ImeAction.Next,
-            onDone = { focusManager.moveFocus(FocusDirection.Down) }
-        )
-
-        LabeledTextField(
             label = "Company Address",
             value = uiState.companyAddress,
             onValueChange = viewModel::onCompanyAddressChanged,
@@ -241,6 +251,16 @@ private fun CompanyForm(
             imeAction = ImeAction.Next,
             onDone = { focusManager.moveFocus(FocusDirection.Down) },
             maxLines = 2
+        )
+
+        LabeledTextField(
+            label = "WiFi Network",
+            value = uiState.wifiNetwork,
+            onValueChange = viewModel::onWifiSSIDChanged,
+            placeholder = "Network name (optional)",
+            icon = FontAwesomeIcons.Solid.Wifi,
+            imeAction = ImeAction.Done,
+            onDone = { focusManager.clearFocus(true) }
         )
 
         LabeledParkSpaces(
@@ -382,19 +402,19 @@ private fun LabeledParkSpaces(
                 // Remove button
                 IconButton(
                     onClick = {
-                        if (value > 1) {
+                        if (value > 2) {
                             onValueChange(value - 1)
                         }
                     },
                     modifier = Modifier
                         .size(36.dp)
                         .background(
-                            color = if (value > 1) Color(0xFFEF4444).copy(alpha = 0.1f) else Color(
+                            color = if (value > 2) Color(0xFFEF4444).copy(alpha = 0.1f) else Color(
                                 0xFFF1F5F9
                             ),
                             shape = CircleShape
                         ),
-                    enabled = value > 1
+                    enabled = value > 2
                 ) {
                     Icon(
                         imageVector = FontAwesomeIcons.Solid.Minus,
