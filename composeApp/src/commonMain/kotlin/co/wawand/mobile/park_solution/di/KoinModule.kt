@@ -8,11 +8,11 @@ import co.wawand.mobile.park_solution.shared.domain.repository.CompanyConfigRepo
 import co.wawand.mobile.park_solution.shared.domain.repository.ParkingSpaceRepository
 import co.wawand.mobile.park_solution.shared.domain.repository.UserRepository
 import co.wawand.mobile.park_solution.ui.auth.SignInViewModel
-import co.wawand.mobile.park_solution.ui.MainViewModel
+import co.wawand.mobile.park_solution.ui.main.MainViewModel
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.CompanySetUpSettingsViewModel
 import co.wawand.mobile.park_solution.ui.companySettings.CompanyConfigViewModel
 import co.wawand.mobile.park_solution.ui.parking.ParkingViewModel
-import co.wawand.mobile.park_solution.ui.profileContent.ProfileViewModel
+import co.wawand.mobile.park_solution.ui.profileContent.newDesign.UserProfileViewModel
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModelOf
@@ -20,12 +20,12 @@ import org.koin.dsl.module
 
 val sharedModule = module {
     single<UserRepository> { UserRepositoryImpl() }
-    single<CompanyConfigRepository>{ CompanyConfigRepositoryImpl() }
+    single<CompanyConfigRepository> { CompanyConfigRepositoryImpl() }
     single<ParkingSpaceRepository> { ParkingSpaceRepositoryImpl() }
 
     viewModelOf(::SignInViewModel)
     viewModelOf(::MainViewModel)
-    viewModelOf(::ProfileViewModel)
+    viewModelOf(::UserProfileViewModel)
     viewModelOf(::ParkingViewModel)
     viewModelOf(::CompanyConfigViewModel)
     viewModelOf(::CompanySetUpSettingsViewModel)

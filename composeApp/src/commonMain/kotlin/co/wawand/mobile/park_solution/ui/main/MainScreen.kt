@@ -1,4 +1,4 @@
-package co.wawand.mobile.park_solution.ui
+package co.wawand.mobile.park_solution.ui.main
 
 import ContentWithMessageBar
 import MessageBarState
@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.wawand.mobile.park_solution.ui.companySettings.CompanySettingsContent
 import co.wawand.mobile.park_solution.ui.parking.ParkingContent
+import co.wawand.mobile.park_solution.ui.profileContent.newDesign.UserProfileContent
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Bars
@@ -187,25 +188,8 @@ private fun MainContent(
         ) {
             when (selectedItemIndex) {
                 0 -> ParkingContent(messageBarState = messageBarState)
-
                 1 -> CompanySettingsContent(messageBarState = messageBarState)
-
-                2 -> {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Settings")
-                    }
-
-                    /*ProfileContent(
-                    onUpdateUser = {},
-                    onLogout = onSignOut,
-                    currentLanguage = "en",
-                    onLanguageChange = {}
-                )*/
-                }
+                2 -> UserProfileContent(messageBarState = messageBarState)
             }
         }
     }

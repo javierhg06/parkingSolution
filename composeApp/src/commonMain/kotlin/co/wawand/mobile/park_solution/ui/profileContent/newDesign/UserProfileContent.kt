@@ -1,0 +1,514 @@
+package co.wawand.mobile.park_solution.ui.profileContent.newDesign
+
+import MessageBarState
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import co.wawand.mobile.park_solution.shared.util.displayResult
+import compose.icons.FontAwesomeIcons
+import compose.icons.fontawesomeicons.Solid
+import compose.icons.fontawesomeicons.solid.Bell
+import compose.icons.fontawesomeicons.solid.Building
+import compose.icons.fontawesomeicons.solid.Camera
+import compose.icons.fontawesomeicons.solid.Check
+import compose.icons.fontawesomeicons.solid.Cog
+import compose.icons.fontawesomeicons.solid.Crown
+import compose.icons.fontawesomeicons.solid.Envelope
+import compose.icons.fontawesomeicons.solid.IdCard
+import compose.icons.fontawesomeicons.solid.Pen
+import compose.icons.fontawesomeicons.solid.Phone
+import compose.icons.fontawesomeicons.solid.SignOutAlt
+import compose.icons.fontawesomeicons.solid.User
+import org.koin.compose.viewmodel.koinViewModel
+
+@Composable
+fun UserProfileContent(messageBarState: MessageBarState) {
+    val viewModel = koinViewModel<UserProfileViewModel>()
+    val uiState by viewModel.uiState.collectAsState()
+
+    val userInformationState = viewModel.userInformationState
+
+    val focusManager = LocalFocusManager.current
+
+    userInformationState.displayResult(
+        onLoading = { viewModel.setLoadingState(true) },
+        onSuccess = { state ->
+            viewModel.setLoadingState(false)
+            viewModel.setUserInformation(state)
+        },
+        onError = { message ->
+            messageBarState.addError(message)
+            viewModel.setLoadingState(false)
+        },
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF8F9FA))
+            .verticalScroll(rememberScrollState())
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Profile",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+            )
+
+            IconButton(
+                onClick = {
+                     if (uiState.isEditingProfile) {
+                         // Save profile changes
+                         viewModel.onSaveProfileClicked()
+                     } else {
+                         viewModel.onEditProfileClicked()
+                     }
+                },
+            ) {
+                Icon(
+                    imageVector = if (uiState.isEditingProfile) FontAwesomeIcons.Solid.Check else FontAwesomeIcons.Solid.Pen,
+                    contentDescription = if (uiState.isEditingProfile) "Save" else "Edit",
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        // Profile Picture & Basic Info Section
+        SettingsCard(
+            title = "Profile Information",
+            icon = FontAwesomeIcons.Solid.User
+        ) {
+            // Profile Picture Section
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Box(
+                    contentAlignment = Alignment.BottomEnd
+                ) {
+                    // Profile Picture
+                    Card(
+                        modifier = Modifier.size(100.dp),
+                        shape = CircleShape,
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        if (uiState.user?.pictureUrl != null) {
+                            // TODO: Use Coil AsyncImage here
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFFE5E7EB)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.User,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.size(40.dp),
+                                    tint = Color(0xFF9CA3AF)
+                                )
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(Color(0xFFE5E7EB)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.User,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.size(40.dp),
+                                    tint = Color(0xFF9CA3AF)
+                                )
+                            }
+                        }
+                    }
+
+                    // Edit Picture Button (only visible when editing)
+                    /*AnimatedVisibility(visible = uiState.isEditingProfile) {
+                        FloatingActionButton(
+                            onClick = {
+                                // TODO: Open image picker using Calf
+                               // viewModel.selectProfilePicture()
+                            },
+                            modifier = Modifier.size(32.dp),
+                            containerColor = Color(0xFF4A6FE7),
+                            contentColor = Color.White
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.Camera,
+                                contentDescription = "Change Picture",
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }*/
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Name Field
+            if (uiState.isEditingProfile) {
+                OutlinedTextField(
+                    value = uiState.name,
+                    onValueChange = { viewModel.onNameChanged(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(text = "Full Name") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.User,
+                            contentDescription = "Name",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color(0xFF4A6FE7)
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4A6FE7),
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Next,
+                        capitalization = KeyboardCapitalization.Words
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedTextField(
+                    value = uiState.phoneNumber,
+                    onValueChange = { viewModel.onPhoneNumberChanged(it) },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text(text = "Phone Number") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Phone,
+                            contentDescription = "Phone",
+                            modifier = Modifier.size(20.dp),
+                            tint = Color(0xFF4A6FE7)
+                        )
+                    },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4A6FE7),
+                        unfocusedBorderColor = Color(0xFFE0E0E0)
+                    ),
+                    maxLines = 1,
+                    keyboardOptions = KeyboardOptions(
+                        imeAction = ImeAction.Done,
+                        keyboardType = KeyboardType.Phone
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = { focusManager.clearFocus() }
+                    ),
+                    shape = RoundedCornerShape(8.dp),
+                )
+            } else {
+                InfoRow(
+                    icon = FontAwesomeIcons.Solid.User,
+                    label = "Full Name",
+                    value = uiState.user?.name ?: "Not set"
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                InfoRow(
+                    icon = FontAwesomeIcons.Solid.Phone,
+                    label = "Phone Number",
+                    value = "Not set"
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Account Information Section (Read-only)
+        SettingsCard(
+            title = "Account Information",
+            icon = FontAwesomeIcons.Solid.IdCard
+        ) {
+            InfoRow(
+                icon = FontAwesomeIcons.Solid.Envelope,
+                label = "Email Address",
+                value = uiState.user?.email ?: "Not available"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            InfoRow(
+                icon = FontAwesomeIcons.Solid.Building,
+                label = "Company ID",
+                value = uiState.user?.companyId ?: "Not assigned"
+            )
+
+            if (uiState.user?.isSuperUser == true) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Crown,
+                        contentDescription = "Super User",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color(0xFFF59E0B)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Account Type",
+                            fontSize = 14.sp,
+                            color = Color(0xFF6B7280),
+                            fontWeight = FontWeight.Medium
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Administrator",
+                                fontSize = 16.sp,
+                                color = Color.Black,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFFFEF3C7)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = "ADMIN",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFD97706),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // App Preferences Section
+        SettingsCard(
+            title = "Preferences",
+            icon = FontAwesomeIcons.Solid.Cog
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Bell,
+                        contentDescription = "Notifications",
+                        modifier = Modifier.size(20.dp),
+                        tint = Color(0xFF6B7280)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Push Notifications",
+                            fontSize = 16.sp,
+                            color = Color.Black,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "Get notified about parking updates",
+                            fontSize = 14.sp,
+                            color = Color(0xFF6B7280)
+                        )
+                    }
+                }
+
+                Switch(
+                    checked = true,//uiState.notificationsEnabled,
+                    onCheckedChange = { /*viewModel.onNotificationsToggled(it)*/ },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = Color(0xFF4A6FE7),
+                        uncheckedThumbColor = Color.White,
+                        uncheckedTrackColor = Color(0xFFE5E7EB)
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Logout Button
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { /*viewModel.logout() */ },
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFEF2F2)
+            ),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 2.dp
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                    contentDescription = "Logout",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color(0xFFEF4444)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Sign Out",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFFEF4444)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+// Reuse the same SettingsCard and InfoRow components from the previous screen
+@Composable
+fun SettingsCard(
+    title: String,
+    icon: ImageVector,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    modifier = Modifier.size(24.dp),
+                    tint = Color(0xFF4A6FE7)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
+            }
+
+            content()
+        }
+    }
+}
+
+@Composable
+fun InfoRow(
+    icon: ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            modifier = Modifier.size(20.dp),
+            tint = Color(0xFF6B7280)
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column {
+            Text(
+                text = label,
+                fontSize = 14.sp,
+                color = Color(0xFF6B7280),
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = value,
+                fontSize = 16.sp,
+                color = Color.Black,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}

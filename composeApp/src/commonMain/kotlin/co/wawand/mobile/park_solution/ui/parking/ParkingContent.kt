@@ -23,16 +23,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,11 +47,8 @@ import co.wawand.mobile.park_solution.shared.domain.model.User
 import co.wawand.mobile.park_solution.shared.util.displayResult
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
-import compose.icons.fontawesomeicons.solid.Bell
 import compose.icons.fontawesomeicons.solid.CircleNotch
-import compose.icons.fontawesomeicons.solid.Clock
 import compose.icons.fontawesomeicons.solid.Directions
-import compose.icons.fontawesomeicons.solid.Parking
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -303,132 +295,6 @@ fun ParkingSpaceCard(
                 Text(
                     text = "💬",
                     fontSize = 12.sp
-                )
-            }
-        }
-    }
-}
-
-//////////////////////////////
-
-@Composable
-private fun LoadingState(
-    currentLanguage: String,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                strokeWidth = 4.dp
-            )
-            Text(
-                text = if (currentLanguage == "es") "Cargando espacios..." else "Loading spaces...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyParkingState(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp),
-            modifier = Modifier.padding(32.dp).verticalScroll(rememberScrollState())
-        ) {
-            // Icon
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.Parking,//Icons.Default.LocalParking,
-                contentDescription = null,
-                modifier = Modifier.size(80.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-            )
-
-            // Title
-            Text(
-                text = "No Parking Spaces",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
-
-            // Description
-            Text(
-                text = "Your company hasn't set up parking spaces yet. Spaces will appear here once they're added by the administrator.",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight * 1.2
-            )
-
-            // Status Cards
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                StatusCard(
-                    icon = FontAwesomeIcons.Solid.Clock,
-                    title = "In Setup",
-                    description = "Spaces are being configured",
-                )
-
-                StatusCard(
-                    icon = FontAwesomeIcons.Solid.Bell,//Icons.Default.Notifications,
-                    title = "We'll Notify You",
-                    description = "You'll get notified when they're ready",
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusCard(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

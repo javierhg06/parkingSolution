@@ -1,4 +1,4 @@
-package co.wawand.mobile.park_solution.ui
+package co.wawand.mobile.park_solution.ui.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
