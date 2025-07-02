@@ -146,6 +146,7 @@ class ParkingSpaceRepositoryImpl : ParkingSpaceRepository {
                 Firebase.firestore
                     .collection("company_parking_spaces")
                     .where { "companyId" equalTo user.companyId }
+                    .orderBy("createdAt")
                     .snapshots()
                     .collectLatest { querySnapshot ->
                         val liveSpaces = mapSnapshotToParkingWithUser(querySnapshot)
