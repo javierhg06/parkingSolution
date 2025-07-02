@@ -61,6 +61,7 @@ class SignInViewModel(
                     id = user.uid,
                     email = user.email.orEmpty(),
                     name = user.displayName.orEmpty(),
+                    phoneNumber = user.phoneNumber.orEmpty(),
                     isSuperUser = false,
                     pictureUrl = user.photoURL,
                     companyId = ""
@@ -137,6 +138,7 @@ class SignInViewModel(
                         id = user.uid,
                         email = user.email ?: "",
                         name = user.displayName ?: "",
+                        phoneNumber = user.phoneNumber ?: "",
                         isSuperUser = false,
                         pictureUrl = user.photoURL,
                         companyId = ""

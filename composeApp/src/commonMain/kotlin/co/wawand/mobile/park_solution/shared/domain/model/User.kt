@@ -10,7 +10,7 @@ data class User(
     val email: String,
     val name: String,
     val isSuperUser: Boolean,
-    //val phoneNumber: String,
+    val phoneNumber: String,
     val companyId: String,
     val pictureUrl: String? = null
 )

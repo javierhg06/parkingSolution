@@ -1,5 +1,7 @@
 package co.wawand.mobile.park_solution.ui.companySetUpSettings
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,55 +14,53 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.ErrorScreen
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.LoadingScreen
+import co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent.SuccessScreen
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ArrowRight
 import compose.icons.fontawesomeicons.solid.Building
 import compose.icons.fontawesomeicons.solid.Car
-import compose.icons.fontawesomeicons.solid.Check
-import compose.icons.fontawesomeicons.solid.Copy
 import compose.icons.fontawesomeicons.solid.Key
 import compose.icons.fontawesomeicons.solid.MapMarkerAlt
+import compose.icons.fontawesomeicons.solid.Minus
+import compose.icons.fontawesomeicons.solid.Plus
+import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Wifi
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
+
 
 @Composable
 fun CreateCompanyFlow(
@@ -95,24 +95,60 @@ fun CreateCompanyFlow(
 }
 
 @Composable
-fun CreateCompanyScreen(viewModel: CompanySetUpSettingsViewModel, uiState: CompanySetUpSettingsState) {
+private fun CreateCompanyScreen(
+    viewModel: CompanySetUpSettingsViewModel,
+    uiState: CompanySetUpSettingsState
+) {
     val scrollState = rememberScrollState()
     val focusManager = LocalFocusManager.current
 
-    Scaffold {
+    Scaffold(
+        containerColor = Color(0xFFF8FAFC)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .padding(top = it.calculateTopPadding(), bottom = it.calculateBottomPadding())
+                .padding(horizontal = 24.dp)
+                .padding(
+                    top = it.calculateTopPadding() + 16.dp,
+                    bottom = it.calculateBottomPadding() + 16.dp
+                )
                 .verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(Modifier.height(16.dp))
+            // Sign Out button at the top
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = {
+                        // Add sign out logic here - you can pass this as a parameter to the composable
+                        // For now, it's just a placeholder
+                    },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = Color(0xFF64748B)
+                    )
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                        contentDescription = "Sign Out",
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Sign Out",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
             CompanyHeader()
-            CompanyDescription()
-            Spacer(Modifier.height(40.dp))
-            CompanyForm(uiState, viewModel, focusManager)
             Spacer(Modifier.height(32.dp))
+            CompanyForm(uiState, viewModel, focusManager)
+            Spacer(Modifier.height(24.dp))
             AccessCodeInfo()
             Spacer(Modifier.height(32.dp))
             CreateCompanyButton(
@@ -126,39 +162,44 @@ fun CreateCompanyScreen(viewModel: CompanySetUpSettingsViewModel, uiState: Compa
 
 @Composable
 private fun CompanyHeader() {
-    Surface(
-        modifier = Modifier.size(80.dp),
-        shape = RoundedCornerShape(20.dp),
-        color = Color(0xFFE8D5FF)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .size(72.dp)
+                .background(
+                    color = Color(0xFF4A90E2).copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(16.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
             Icon(
                 imageVector = FontAwesomeIcons.Solid.Building,
-                contentDescription = "Building",
-                tint = Color(0xFF8B5CF6),
-                modifier = Modifier.size(40.dp)
+                contentDescription = "Company Setup",
+                tint = Color(0xFF4A90E2),
+                modifier = Modifier.size(32.dp)
             )
         }
-    }
-}
 
-@Composable
-private fun CompanyDescription() {
-    Spacer(Modifier.height(24.dp))
-    Text(
-        text = "Create Your Company",
-        fontSize = 32.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF1F2937),
-        textAlign = TextAlign.Center
-    )
-    Spacer(Modifier.height(8.dp))
-    Text(
-        text = "Set up your parking management system",
-        fontSize = 18.sp,
-        color = Color(0xFF6B7280),
-        textAlign = TextAlign.Center
-    )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Create Company",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF1E293B)
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "Set up your parking management system",
+            fontSize = 16.sp,
+            color = Color(0xFF64748B),
+            textAlign = TextAlign.Center
+        )
+    }
 }
 
 @Composable
@@ -169,13 +210,13 @@ private fun CompanyForm(
 ) {
     Column(
         modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        verticalArrangement = Arrangement.spacedBy(20.dp)
     ) {
         LabeledTextField(
             label = "Company Name",
             value = uiState.companyName,
             onValueChange = viewModel::onCompanyNameChanged,
-            placeholder = "Enter your company name",
+            placeholder = "Enter company name",
             icon = FontAwesomeIcons.Solid.Building,
             imeAction = ImeAction.Next,
             onDone = { focusManager.moveFocus(FocusDirection.Down) }
@@ -185,7 +226,7 @@ private fun CompanyForm(
             label = "WiFi Network",
             value = uiState.wifiNetwork,
             onValueChange = viewModel::onWifiSSIDChanged,
-            placeholder = "Enter WiFi network name",
+            placeholder = "Network name (optional)",
             icon = FontAwesomeIcons.Solid.Wifi,
             imeAction = ImeAction.Next,
             onDone = { focusManager.moveFocus(FocusDirection.Down) }
@@ -195,93 +236,55 @@ private fun CompanyForm(
             label = "Company Address",
             value = uiState.companyAddress,
             onValueChange = viewModel::onCompanyAddressChanged,
-            placeholder = "Enter your company address",
+            placeholder = "Street address",
             icon = FontAwesomeIcons.Solid.MapMarkerAlt,
             imeAction = ImeAction.Next,
             onDone = { focusManager.moveFocus(FocusDirection.Down) },
-            maxLines = 3
+            maxLines = 2
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            LabeledTextField(
-                label = "Latitude",
-                value = uiState.latitude,
-                onValueChange = viewModel::onLatitudeChanged,
-                placeholder = "e.g., 10.9639",
-                icon = FontAwesomeIcons.Solid.MapMarkerAlt,
-                keyboardType = KeyboardType.Decimal,
-                imeAction = ImeAction.Next,
-                onDone = { focusManager.moveFocus(FocusDirection.Right) },
-                modifier = Modifier.weight(1f)
-            )
-
-            LabeledTextField(
-                label = "Longitude",
-                value = uiState.longitude,
-                onValueChange = viewModel::onLongitudeChanged,
-                placeholder = "e.g., -74.7813",
-                icon = FontAwesomeIcons.Solid.MapMarkerAlt,
-                keyboardType = KeyboardType.Decimal,
-                imeAction = ImeAction.Next,
-                onDone = { focusManager.moveFocus(FocusDirection.Down) },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        LabeledTextField(
-            label = "Total Parking Spaces",
-            value = uiState.totalParkingSpaces.toString(),
-            onValueChange = {
-                val parsed = it.toIntOrNull()
-                if (it.all(Char::isDigit) && (parsed == null || parsed in 1..100)) {
-                    viewModel.onParkingSpacesChanged(parsed ?: 2)
-                }
-            },
-            placeholder = "e.g., 10",
+        LabeledParkSpaces(
+            label = "Parking Spaces",
+            value = uiState.totalParkingSpaces,
+            onValueChange = { viewModel.onParkingSpacesChanged(it) },
             icon = FontAwesomeIcons.Solid.Car,
-            keyboardType = KeyboardType.Text,
-            imeAction = ImeAction.Done,
-            onDone = { focusManager.clearFocus() }
         )
     }
 }
 
 @Composable
 private fun AccessCodeInfo() {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        color = Color(0xFFF3F4F6)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.Key,
-                contentDescription = "Access Code",
-                tint = Color(0xFF8B5CF6),
-                modifier = Modifier.size(24.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = Color(0xFF4A90E2).copy(alpha = 0.08f),
+                shape = RoundedCornerShape(12.dp)
             )
-            Spacer(Modifier.width(12.dp))
-            Column {
-                Text(
-                    text = "Access Code",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF8B5CF6)
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "After creating your company, you'll receive a unique 6-digit code that your team members can use to join.",
-                    fontSize = 14.sp,
-                    color = Color(0xFF6B7280),
-                    lineHeight = 20.sp
-                )
-            }
+            .padding(16.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Icon(
+            imageVector = FontAwesomeIcons.Solid.Key,
+            contentDescription = "Access Code",
+            tint = Color(0xFF4A90E2),
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(Modifier.width(12.dp))
+        Column {
+            Text(
+                text = "Access Code",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1E293B)
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                text = "You'll receive a 6-digit code for team members to join your company.",
+                fontSize = 14.sp,
+                color = Color(0xFF64748B),
+                lineHeight = 20.sp
+            )
         }
     }
 }
@@ -293,10 +296,16 @@ private fun CreateCompanyButton(onClick: () -> Unit, enabled: Boolean) {
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(52.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFF8B5CF6)
+            containerColor = Color(0xFF4A90E2),
+            disabledContainerColor = Color(0xFF4A90E2).copy(alpha = 0.4f)
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = 2.dp,
+            pressedElevation = 4.dp,
+            disabledElevation = 0.dp
         )
     ) {
         Text(
@@ -308,10 +317,114 @@ private fun CreateCompanyButton(onClick: () -> Unit, enabled: Boolean) {
         Spacer(Modifier.width(8.dp))
         Icon(
             imageVector = FontAwesomeIcons.Solid.ArrowRight,
-            contentDescription = "Arrow Right",
+            contentDescription = "Continue",
             tint = Color.White,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(16.dp)
         )
+    }
+}
+
+@Composable
+private fun LabeledParkSpaces(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    icon: ImageVector,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF374151),
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .border(
+                    width = 1.dp,
+                    color = Color(0xFFE2E8F0),
+                    shape = RoundedCornerShape(12.dp)
+                )
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = Color(0xFF64748B),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = "$value spaces",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF1E293B)
+                )
+            }
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Remove button
+                IconButton(
+                    onClick = {
+                        if (value > 1) {
+                            onValueChange(value - 1)
+                        }
+                    },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            color = if (value > 1) Color(0xFFEF4444).copy(alpha = 0.1f) else Color(
+                                0xFFF1F5F9
+                            ),
+                            shape = CircleShape
+                        ),
+                    enabled = value > 1
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Minus,
+                        contentDescription = "Remove space",
+                        modifier = Modifier.size(14.dp),
+                        tint = if (value > 1) Color(0xFFEF4444) else Color(0xFF94A3B8)
+                    )
+                }
+
+                // Add button
+                IconButton(
+                    onClick = {
+                        onValueChange(value + 1)
+                    },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(
+                            color = Color(0xFF10B981).copy(alpha = 0.1f),
+                            shape = CircleShape
+                        )
+                ) {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Plus,
+                        contentDescription = "Add space",
+                        modifier = Modifier.size(14.dp),
+                        tint = Color(0xFF10B981)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -340,12 +453,18 @@ private fun LabeledTextField(
             value = value,
             onValueChange = onValueChange,
             placeholder = {
-                Text(text = placeholder, color = Color(0xFF9CA3AF))
+                Text(
+                    text = placeholder,
+                    color = Color(0xFF94A3B8),
+                    fontSize = 16.sp
+                )
             },
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF8B5CF6),
-                unfocusedBorderColor = Color(0xFFD1D5DB)
+                focusedBorderColor = Color(0xFF4A90E2),
+                unfocusedBorderColor = Color(0xFFE2E8F0),
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White
             ),
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
@@ -354,237 +473,18 @@ private fun LabeledTextField(
             ),
             keyboardActions = KeyboardActions(onDone = { onDone() }),
             maxLines = maxLines,
+            textStyle = LocalTextStyle.current.copy(fontSize = 16.sp),
             leadingIcon = {
                 Icon(
                     imageVector = icon,
                     contentDescription = label,
-                    tint = Color(0xFF6B7280),
-                    modifier = Modifier.size(20.dp)
+                    tint = Color(0xFF64748B),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         )
     }
 }
 
-@Composable
-fun LoadingScreen() {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CompanyDescription()
 
-            Spacer(modifier = Modifier.height(48.dp))
 
-            CircularProgressIndicator(
-                modifier = Modifier.size(48.dp),
-                color = Color(0xFF8B5CF6),
-                strokeWidth = 4.dp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Creating your company...",
-                fontSize = 16.sp,
-                color = Color(0xFF6B7280),
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-fun SuccessScreen(
-    accessCode: String,
-    navigateToHome: () -> Unit
-) {
-
-    Scaffold { innerPadding ->
-        val clipboardManager = LocalClipboardManager.current
-        var showCopiedMessage by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            CompanyDescription()
-
-            Spacer(modifier = Modifier.height(48.dp))
-
-            // Success Icon
-            Surface(
-                modifier = Modifier.size(120.dp),
-                shape = RoundedCornerShape(24.dp),
-                color = Color(0xFFD1FAE5)
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = FontAwesomeIcons.Solid.Check,
-                        contentDescription = "Success",
-                        tint = Color(0xFF10B981),
-                        modifier = Modifier.size(60.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = "Company Created Successfully!",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1F2937),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Your company access code is:",
-                fontSize = 18.sp,
-                color = Color(0xFF6B7280),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Access Code Display
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFF9FAFB),
-                shadowElevation = 2.dp
-            ) {
-                Column(
-                    modifier = Modifier.padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = accessCode,
-                        fontSize = 48.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937),
-                        textAlign = TextAlign.Center,
-                        letterSpacing = 4.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                           clipboardManager.setText(AnnotatedString(accessCode))
-                            showCopiedMessage = true
-                        },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF3B82F6)
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = FontAwesomeIcons.Solid.Copy,
-                            contentDescription = "Copy",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (showCopiedMessage) "Copied!" else "Copy Code",
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Text(
-                text = "Share this code with your team members so they can join your company.",
-                fontSize = 16.sp,
-                color = Color(0xFF6B7280),
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Text(
-                text = "Redirecting to parking dashboard...",
-                fontSize = 16.sp,
-                color = Color(0xFF3B82F6),
-                textAlign = TextAlign.Center
-            )
-        }
-
-        // Reset copied message after 2 seconds
-        LaunchedEffect(showCopiedMessage) {
-            if (showCopiedMessage) {
-                delay(2000)
-                showCopiedMessage = false
-            }
-        }
-
-        scope.launch {
-            delay(2000)
-            navigateToHome()
-        }
-    }
-}
-
-@Composable
-fun ErrorScreen(
-    errorMessage: String,
-    onRetry: () -> Unit
-) {
-    Scaffold { innerPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Error Creating Company",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFDC2626),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = errorMessage,
-                fontSize = 16.sp,
-                color = Color(0xFF6B7280),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF8B5CF6)
-                )
-            ) {
-                Text("Try Again")
-            }
-        }
-    }
-}

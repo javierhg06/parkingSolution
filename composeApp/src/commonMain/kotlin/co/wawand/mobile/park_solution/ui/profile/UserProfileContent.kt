@@ -1,7 +1,6 @@
-package co.wawand.mobile.park_solution.ui.profileContent.newDesign
+package co.wawand.mobile.park_solution.ui.profile
 
 import MessageBarState
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +23,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -52,7 +50,6 @@ import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Bell
 import compose.icons.fontawesomeicons.solid.Building
-import compose.icons.fontawesomeicons.solid.Camera
 import compose.icons.fontawesomeicons.solid.Check
 import compose.icons.fontawesomeicons.solid.Cog
 import compose.icons.fontawesomeicons.solid.Crown
@@ -357,7 +354,9 @@ fun UserProfileContent(messageBarState: MessageBarState) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.weight(1f)
                 ) {
                     Icon(
                         imageVector = FontAwesomeIcons.Solid.Bell,
@@ -382,7 +381,8 @@ fun UserProfileContent(messageBarState: MessageBarState) {
                 }
 
                 Switch(
-                    checked = true,//uiState.notificationsEnabled,
+                    enabled = false,
+                    checked = false,//uiState.notificationsEnabled,
                     onCheckedChange = { /*viewModel.onNotificationsToggled(it)*/ },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
@@ -393,50 +393,9 @@ fun UserProfileContent(messageBarState: MessageBarState) {
                 )
             }
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Logout Button
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { /*viewModel.logout() */ },
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFFEF2F2)
-            ),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 2.dp
-            ),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = FontAwesomeIcons.Solid.SignOutAlt,
-                    contentDescription = "Logout",
-                    modifier = Modifier.size(20.dp),
-                    tint = Color(0xFFEF4444)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Sign Out",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFFEF4444)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 
-// Reuse the same SettingsCard and InfoRow components from the previous screen
 @Composable
 fun SettingsCard(
     title: String,

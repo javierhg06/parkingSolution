@@ -4,11 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import co.wawand.mobile.park_solution.ui.main.MainScreen
 import co.wawand.mobile.park_solution.ui.auth.SignInScreen
+import co.wawand.mobile.park_solution.ui.auth.SignInScreenRedesigned
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.CreateCompanyFlow
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.JoinCompanyScreen
-import co.wawand.mobile.park_solution.ui.main.redesign.MainScreenRedesigned
+import co.wawand.mobile.park_solution.ui.main.MainScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -32,7 +32,7 @@ fun Navigation(startDestination: Screen = Screen.SignInScreen) {
 
     NavHost(startDestination = startDestination, navController = navController) {
         composable<Screen.SignInScreen> {
-            SignInScreen(
+            SignInScreenRedesigned(
                 navigateToHome = {
                     navController.navigate(Screen.MainScreen) {
                         popUpTo<Screen.SignInScreen> { inclusive = true }
@@ -72,7 +72,7 @@ fun Navigation(startDestination: Screen = Screen.SignInScreen) {
         }
 
         composable<Screen.MainScreen> {
-            MainScreenRedesigned(
+            MainScreen(
                 navigateToSignIn = {
                     navController.navigate(Screen.SignInScreen) {
                         popUpTo<Screen.MainScreen> { inclusive = true }

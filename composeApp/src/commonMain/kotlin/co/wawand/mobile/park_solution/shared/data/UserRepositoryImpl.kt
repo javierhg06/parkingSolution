@@ -44,6 +44,7 @@ class UserRepositoryImpl : UserRepository {
                     id = user.uid,
                     email = user.email ?: "",
                     name = user.displayName ?: "",
+                    phoneNumber = user.phoneNumber ?: "",
                     isSuperUser = false,
                     pictureUrl = user.photoURL,
                     companyId = ""
@@ -91,6 +92,7 @@ class UserRepositoryImpl : UserRepository {
                             id = document.id,
                             email = document.get(field = "email"),
                             name = document.get(field = "name"),
+                            phoneNumber = document.get(field = "phoneNumber"),
                             isSuperUser = document.get(field = "isSuperUser"),
                             companyId = document.get(field = "companyId")
                         )

@@ -1,5 +1,15 @@
 package co.wawand.mobile.park_solution.ui.companySetUpSettings
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -26,14 +37,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -45,43 +63,113 @@ import androidx.compose.ui.unit.sp
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.ArrowRight
-import compose.icons.fontawesomeicons.solid.Link
+import compose.icons.fontawesomeicons.solid.ExclamationTriangle
+import compose.icons.fontawesomeicons.solid.Headset
+import compose.icons.fontawesomeicons.solid.Key
+import compose.icons.fontawesomeicons.solid.QuestionCircle
+import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Users
 import org.koin.compose.viewmodel.koinViewModel
 
-
 @Composable
-fun JoinCompanyScreen(navigateToHome: () -> Unit) {
+fun JoinCompanyScreen(
+    navigateToHome: () -> Unit,
+    onLogout: () -> Unit = {} // Add logout callback
+) {
     val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
 
-    Scaffold(containerColor = Color(0xFFF5F5F5)) { padding ->
-        Column(
+    // Animation states
+    var visible by remember { mutableStateOf(false) }
+    val animatedOffset by animateDpAsState(
+        targetValue = if (visible) 0.dp else 50.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "offset"
+    )
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 600),
+        label = "alpha"
+    )
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    Scaffold(
+        containerColor = Color.Transparent
+    ) { padding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(padding)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(scrollState),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0xFFF8FAFC),
+                            Color(0xFFE2E8F0),
+                            Color.White
+                        )
+                    )
+                )
         ) {
-            Spacer(Modifier.height(60.dp))
-            CompanyIcon()
-            TitleSection()
-            Spacer(Modifier.height(48.dp))
-            AccessCodeSection(
-                code = uiState.accessCode,
-                onCodeChange = viewModel::onAccessCodeChanged,
-                errorMessage = uiState.joinedCompanyErrorMessage,
-                isLoading = uiState.isJoiningCompany
-            )
-            Spacer(Modifier.height(32.dp))
-            NeedCodeCard()
-            Spacer(Modifier.height(24.dp))
-            JoinCompanyButton(uiState.accessCode, viewModel::onJoinCompanyClick)
-            Spacer(Modifier.height(24.dp))
-            SupportText()
-            Spacer(Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(scrollState)
+                    .graphicsLayer {
+                        translationY = animatedOffset.toPx()
+                        alpha = animatedAlpha
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(16.dp))
+                // Sign Out button at the top
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = {
+                            // Add sign out logic here - you can pass this as a parameter to the composable
+                            // For now, it's just a placeholder
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = Color(0xFF64748B)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                            contentDescription = "Sign Out",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Sign Out",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+                EnhancedCompanyIcon()
+                EnhancedTitleSection()
+                Spacer(Modifier.height(48.dp))
+                EnhancedAccessCodeSection(
+                    code = uiState.accessCode,
+                    onCodeChange = viewModel::onAccessCodeChanged,
+                    errorMessage = uiState.joinedCompanyErrorMessage,
+                    isLoading = uiState.isJoiningCompany
+                )
+                Spacer(Modifier.height(32.dp))
+                EnhancedJoinCompanyButton(uiState.accessCode, viewModel::onJoinCompanyClick)
+                Spacer(Modifier.height(24.dp))
+            }
         }
     }
 
@@ -93,219 +181,286 @@ fun JoinCompanyScreen(navigateToHome: () -> Unit) {
 }
 
 @Composable
-private fun AccessCodeSection(code: String, onCodeChange: (String) -> Unit, errorMessage: String, isLoading: Boolean) {
+private fun EnhancedAccessCodeSection(
+    code: String,
+    onCodeChange: (String) -> Unit,
+    errorMessage: String,
+    isLoading: Boolean
+) {
     val focusManager = LocalFocusManager.current
-    Column(Modifier.fillMaxWidth()) {
-        Text(
-            text = "Company Access Code",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF333333),
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
 
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(84.dp)
-                    .background(Color(0xFFE3F2FD), shape = RoundedCornerShape(8.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            OutlinedTextField(
-                value = code,
-                onValueChange = { newValue ->
-                    if (newValue.length <= 6 && newValue.all { it.isDigit() }) {
-                        onCodeChange(newValue)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(84.dp),
-                textStyle = TextStyle(
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Medium,
-                    letterSpacing = 8.sp,
-                    textAlign = TextAlign.Center
-                ),
-                placeholder = {
-                    Text(
-                        text = "000000",
-                        fontSize = 24.sp,
-                        color = Color(0xFFCCCCCC),
-                        fontWeight = FontWeight.Medium,
-                        letterSpacing = 8.sp,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
-                },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Text,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { focusManager.clearFocus() }
-                ),
-                singleLine = true,
-                shape = RoundedCornerShape(8.dp),
-                isError = errorMessage.isNotEmpty(),
-                supportingText = {
-                    if (errorMessage.isNotEmpty()) {
-                        Text(
-                            text = errorMessage,
-                            color = Color.Red,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF2196F3),
-                    unfocusedBorderColor = Color(0xFFE0E0E0)
-                )
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = FontAwesomeIcons.Solid.Key,
+                contentDescription = "Access Code",
+                tint = Color(0xFF3B82F6),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Company Access Code",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = Color(0xFF1E293B),
             )
         }
 
+        Spacer(Modifier.height(20.dp))
 
-        Spacer(Modifier.height(12.dp))
+        if (isLoading) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFE0F2FE)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF3B82F6),
+                            strokeWidth = 3.dp
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Verifying code...",
+                            fontSize = 14.sp,
+                            color = Color(0xFF3B82F6),
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 6 && newValue.all { it.isDigit() }) {
+                                onCodeChange(newValue)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        textStyle = TextStyle(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 8.sp,
+                            textAlign = TextAlign.Center,
+                            color = Color(0xFF1E293B)
+                        ),
+                        placeholder = {
+                            Text(
+                                text = "000000",
+                                fontSize = 32.sp,
+                                color = Color(0xFFCBD5E1),
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 8.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() }
+                        ),
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        isError = errorMessage.isNotEmpty(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF3B82F6),
+                            unfocusedBorderColor = Color(0xFFE2E8F0),
+                            errorBorderColor = Color(0xFFEF4444),
+                            focusedContainerColor = Color(0xFFFAFAFA),
+                            unfocusedContainerColor = Color(0xFFFAFAFA)
+                        )
+                    )
+
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ExclamationTriangle,
+                                contentDescription = "Error",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = errorMessage,
+                                color = Color(0xFFEF4444),
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
         Text(
             text = "Enter the 6-digit code exactly as provided by your company administrator",
             fontSize = 14.sp,
-            color = Color(0xFF666666),
-            lineHeight = 20.sp
+            color = Color(0xFF64748B),
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-
 @Composable
-private fun CompanyIcon() {
+private fun EnhancedCompanyIcon() {
     Box(
-        modifier = Modifier
-            .size(80.dp)
-            .background(Color(0xFFE3F2FD), shape = RoundedCornerShape(16.dp)),
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(120.dp)
     ) {
-        Icon(
-            imageVector = FontAwesomeIcons.Solid.Users,
-            contentDescription = "Company",
-            modifier = Modifier.size(40.dp),
-            tint = Color(0xFF2196F3)
-        )
-    }
-}
+        // Glow effect
+        Surface(
+            modifier = Modifier.size(100.dp),
+            shape = CircleShape,
+            color = Color(0xFF3B82F6).copy(alpha = 0.1f)
+        ) {}
 
+        Surface(
+            modifier = Modifier.size(80.dp),
+            shape = CircleShape,
+            color = Color(0xFF3B82F6).copy(alpha = 0.15f)
+        ) {}
 
-@Composable
-private fun TitleSection() {
-    Text(
-        text = "Join Your Company",
-        fontSize = 32.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color(0xFF1A1A1A),
-        textAlign = TextAlign.Center
-    )
-    Spacer(Modifier.height(16.dp))
-    Text(
-        text = "Enter the 6-digit code provided by your administrator",
-        fontSize = 16.sp,
-        color = Color(0xFF666666),
-        textAlign = TextAlign.Center,
-        lineHeight = 24.sp
-    )
-}
-
-
-@Composable
-private fun NeedCodeCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F8FF)),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.Top
+        Surface(
+            modifier = Modifier.size(64.dp),
+            shape = CircleShape,
+            color = Color(0xFFDEF7EC),
+            shadowElevation = 8.dp
         ) {
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.Link,
-                contentDescription = "Link",
-                modifier = Modifier
-                    .size(20.dp)
-                    .padding(top = 2.dp),
-                tint = Color(0xFF2196F3)
-            )
-
-            Spacer(Modifier.width(12.dp))
-
-            Column {
-                Text(
-                    text = "Need a Code?",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF2196F3)
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "Contact your company administrator to get your unique access code. This code links you to your company's parking system.",
-                    fontSize = 14.sp,
-                    color = Color(0xFF2196F3),
-                    lineHeight = 20.sp
+            Box(
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = FontAwesomeIcons.Solid.Users,
+                    contentDescription = "Company",
+                    modifier = Modifier.size(32.dp),
+                    tint = Color(0xFF3B82F6)
                 )
             }
         }
     }
 }
 
+@Composable
+private fun EnhancedTitleSection() {
+    Text(
+        text = "👋 Join Your Team",
+        fontSize = 24.sp,
+        fontWeight = FontWeight.ExtraBold,
+        color = Color(0xFF0F172A),
+        textAlign = TextAlign.Center
+    )
+    Spacer(Modifier.height(12.dp))
+    Text(
+        text = "Connect with your company's parking workspace using your unique access code",
+        fontSize = 18.sp,
+        color = Color(0xFF64748B),
+        textAlign = TextAlign.Center,
+        lineHeight = 26.sp,
+        fontWeight = FontWeight.Medium
+    )
+}
 
 @Composable
-private fun JoinCompanyButton(accessCode: String, onClick: () -> Unit = {}) {
+private fun EnhancedJoinCompanyButton(accessCode: String, onClick: () -> Unit = {}) {
     val isCodeValid = accessCode.length == 6
 
     Button(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp),
+            .height(60.dp),
         enabled = isCodeValid,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isCodeValid) Color(0xFF2196F3) else Color(0xFFCCCCCC),
-            contentColor = Color.White
+            containerColor = if (isCodeValid) Color(0xFF3B82F6) else Color(0xFFCBD5E1),
+            contentColor = Color.White,
+            disabledContainerColor = Color(0xFFE2E8F0),
+            disabledContentColor = Color(0xFF94A3B8)
         ),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = if (isCodeValid) 6.dp else 0.dp
+        )
     ) {
         Row(
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            AnimatedVisibility(
+                visible = isCodeValid,
+                enter = slideInHorizontally() + fadeIn(),
+                exit = slideOutHorizontally() + fadeOut()
+            ) {
+                Row {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Users,
+                        contentDescription = "Join",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
+            }
+
             Text(
-                text = "Join Company",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                text = if (isCodeValid) "Join Company" else "Enter 6-digit code",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.width(8.dp))
-            Icon(
-                imageVector = FontAwesomeIcons.Solid.ArrowRight,
-                contentDescription = "Arrow right",
-                modifier = Modifier.size(16.dp)
-            )
+
+            AnimatedVisibility(
+                visible = isCodeValid,
+                enter = slideInHorizontally() + fadeIn(),
+                exit = slideOutHorizontally() + fadeOut()
+            ) {
+                Row {
+                    Spacer(Modifier.width(12.dp))
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.ArrowRight,
+                        contentDescription = "Arrow right",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
         }
     }
-}
-
-
-@Composable
-private fun SupportText() {
-    Text(
-        text = "Need help? Contact support",
-        fontSize = 14.sp,
-        color = Color(0xFF666666),
-        textAlign = TextAlign.Center
-    )
 }

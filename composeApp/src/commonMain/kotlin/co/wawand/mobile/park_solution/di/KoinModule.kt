@@ -12,7 +12,7 @@ import co.wawand.mobile.park_solution.ui.main.MainViewModel
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.CompanySetUpSettingsViewModel
 import co.wawand.mobile.park_solution.ui.companySettings.CompanyConfigViewModel
 import co.wawand.mobile.park_solution.ui.parking.ParkingViewModel
-import co.wawand.mobile.park_solution.ui.profileContent.newDesign.UserProfileViewModel
+import co.wawand.mobile.park_solution.ui.profile.UserProfileViewModel
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.viewModelOf

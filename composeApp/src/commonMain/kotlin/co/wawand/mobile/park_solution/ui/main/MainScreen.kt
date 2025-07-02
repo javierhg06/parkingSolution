@@ -14,21 +14,22 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
@@ -39,23 +40,22 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.wawand.mobile.park_solution.ui.companySettings.CompanySettingsContent
-import co.wawand.mobile.park_solution.ui.parking.ParkingContent
-import co.wawand.mobile.park_solution.ui.profileContent.newDesign.UserProfileContent
+import co.wawand.mobile.park_solution.ui.parking.redesign.ParkingContentRedesigned
+import co.wawand.mobile.park_solution.ui.profile.UserProfileContent
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
 import compose.icons.fontawesomeicons.solid.Bars
 import compose.icons.fontawesomeicons.solid.Car
-import compose.icons.fontawesomeicons.solid.CarAlt
-import compose.icons.fontawesomeicons.solid.Tools
+import compose.icons.fontawesomeicons.solid.Cog
+import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.User
-import compose.icons.fontawesomeicons.solid.UserAlt
-import compose.icons.fontawesomeicons.solid.Walking
+import compose.icons.fontawesomeicons.solid.Wifi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
@@ -92,9 +92,9 @@ fun MainScreen(navigateToSignIn: () -> Unit) {
                     .padding(it),
                 messageBarState = messageBarState,
                 errorMaxLines = 2,
-                errorContainerColor = Color(0xFFB71C1C),
+                errorContainerColor = Color(0xFFDC2626),
                 errorContentColor = Color.White,
-                contentBackgroundColor = Color.Blue
+                contentBackgroundColor = Color.Transparent
             ) {
                 MainContent(
                     drawerState = drawerState,
@@ -114,57 +114,170 @@ private fun MainDrawer(
     onSignOut: () -> Unit
 ) {
     val items = listOf(
-        NavigationItems("Parking", FontAwesomeIcons.Solid.Car, FontAwesomeIcons.Solid.CarAlt),
-        NavigationItems("Settings", FontAwesomeIcons.Solid.Tools, FontAwesomeIcons.Solid.Tools),
-        NavigationItems("Profile", FontAwesomeIcons.Solid.User, FontAwesomeIcons.Solid.UserAlt)
+        NavigationItems(
+            title = "Parking",
+            selectedIcon = FontAwesomeIcons.Solid.Car,
+            unselectedIcon = FontAwesomeIcons.Solid.Car//FontAwesomeIcons.Regular.Car
+        ),
+        NavigationItems(
+            title = "Settings",
+            selectedIcon = FontAwesomeIcons.Solid.Cog,
+            unselectedIcon = FontAwesomeIcons.Solid.Cog//FontAwesomeIcons.Regular.Cog
+        ),
+        NavigationItems(
+            title = "Profile",
+            selectedIcon = FontAwesomeIcons.Solid.User,
+            unselectedIcon = FontAwesomeIcons.Solid.User//FontAwesomeIcons.Regular.User
+        )
     )
 
-    ModalDrawerSheet {
-        Box(Modifier.fillMaxHeight().fillMaxWidth(0.8f)) {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
-                Spacer(Modifier.height(12.dp))
-                Text("Menu", Modifier.padding(16.dp), style = MaterialTheme.typography.titleLarge)
-                HorizontalDivider()
-
-                items.forEachIndexed { index, item ->
-                    NavigationDrawerItem(
-                        label = { Text(item.title) },
-                        selected = index == selectedItemIndex,
-                        onClick = { onItemSelected(index) },
-                        icon = {
-                            Icon(
-                                imageVector = if (index == selectedItemIndex) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.title,
-                                modifier = Modifier.size(24.dp)
+    ModalDrawerSheet(
+        modifier = Modifier.fillMaxWidth(0.85f),
+        drawerContainerColor = Color.White,
+        drawerContentColor = Color.Black
+    ) {
+        Box(modifier = Modifier.fillMaxHeight()) {
+            Column {
+                // Enhanced Header Section
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF4A6FE7),
+                                    Color(0xFF3B5CE8)
+                                )
                             )
-                        },
-                        modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
-                    )
+                        )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        // App Logo/Icon
+                        Card(
+                            modifier = Modifier.size(60.dp),
+                            shape = CircleShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.White.copy(alpha = 0.2f)
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = FontAwesomeIcons.Solid.Car,
+                                    contentDescription = "App Logo",
+                                    modifier = Modifier.size(28.dp),
+                                    tint = Color.White
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = "Park Solution",
+                            color = Color.White,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = "Smart Parking Management",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
 
-                HorizontalDivider(Modifier.padding(vertical = 8.dp))
+                // Navigation Items
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp)
+                ) {
+                    items.forEachIndexed { index, item ->
+                        NavigationDrawerItem(
+                            label = {
+                                Text(
+                                    text = item.title,
+                                    fontWeight = if (index == selectedItemIndex) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontSize = 16.sp
+                                )
+                            },
+                            selected = index == selectedItemIndex,
+                            onClick = { onItemSelected(index) },
+                            icon = {
+                                Icon(
+                                    imageVector = if (index == selectedItemIndex) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.title,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            },
+                            colors = NavigationDrawerItemDefaults.colors(
+                                selectedContainerColor = Color(0xFF4A6FE7).copy(alpha = 0.1f),
+                                selectedIconColor = Color(0xFF4A6FE7),
+                                selectedTextColor = Color(0xFF4A6FE7),
+                                unselectedIconColor = Color(0xFF6B7280),
+                                unselectedTextColor = Color(0xFF374151)
+                            ),
+                            modifier = Modifier.padding(
+                                horizontal = 16.dp,
+                                vertical = 4.dp
+                            )
+                        )
+                    }
+                }
             }
 
-            Column(modifier = Modifier.align(Alignment.BottomStart)) {
+            // Sign Out Section
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    color = Color(0xFFE5E7EB)
+                )
+
                 NavigationDrawerItem(
-                    label = { Text("Sign Out") },
+                    label = {
+                        Text(
+                            text = "Sign Out",
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 16.sp,
+                            color = Color(0xFFDC2626)
+                        )
+                    },
                     selected = false,
                     icon = {
                         Icon(
-                            FontAwesomeIcons.Solid.Walking,
-                            contentDescription = null,
-                            Modifier.size(24.dp)
+                            imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                            contentDescription = "Sign Out",
+                            modifier = Modifier.size(22.dp),
+                            tint = Color(0xFFDC2626)
                         )
                     },
                     onClick = onSignOut,
-                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent
+                    ),
+                    modifier = Modifier.padding(horizontal = 0.dp)
                 )
-                Spacer(Modifier.height(12.dp))
             }
         }
     }
 }
-
 
 @Composable
 private fun MainContent(
@@ -173,58 +286,123 @@ private fun MainContent(
     scope: CoroutineScope,
     messageBarState: MessageBarState,
 ) {
-    Column(Modifier.fillMaxSize()) {
-        TopBar(onMenuClick = {
-            scope.launch {
-                if (drawerState.isClosed) drawerState.open() else drawerState.close()
-            }
-        })
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF4A6FE7),
+                        Color(0xFF3B5CE8)
+                    )
+                )
+            )
+    ) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            TopBar(
+                onMenuClick = {
+                    scope.launch {
+                        if (drawerState.isClosed) drawerState.open() else drawerState.close()
+                    }
+                },
+            )
+            Spacer(modifier = Modifier.height(16.dp))
 
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                .padding(16.dp)
-        ) {
-            when (selectedItemIndex) {
-                0 -> ParkingContent(messageBarState = messageBarState)
-                1 -> CompanySettingsContent(messageBarState = messageBarState)
-                2 -> UserProfileContent(messageBarState = messageBarState)
+            // Content Area with rounded corners
+            Card(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 8.dp),
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(0xFFF8F9FA)
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp)
+                ) {
+                    when (selectedItemIndex) {
+                        0 -> ParkingContentRedesigned(messageBarState = messageBarState)
+                        1 -> CompanySettingsContent(messageBarState = messageBarState)
+                        2 -> UserProfileContent(messageBarState = messageBarState)
+                    }
+                }
             }
         }
     }
 }
 
-
 @Composable
-private fun TopBar(onMenuClick: () -> Unit) {
+private fun TopBar(
+    onMenuClick: () -> Unit,
+    isConnected: Boolean = false
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp, horizontal = 8.dp),
+            .padding(horizontal = 16.dp)
+            .statusBarsPadding(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton(onClick = onMenuClick) {
-            Icon(FontAwesomeIcons.Solid.Bars, contentDescription = "Menu", Modifier.size(32.dp))
+        IconButton(
+            onClick = onMenuClick,
+            modifier = Modifier
+                .size(44.dp)
+                .background(
+                    Color.White.copy(alpha = 0.15f),
+                    CircleShape
+                )
+        ) {
+            Icon(
+                imageVector = FontAwesomeIcons.Solid.Bars,
+                contentDescription = "Menu",
+                modifier = Modifier.size(18.dp),
+                tint = Color.White
+            )
         }
 
-        Column(Modifier.fillMaxWidth()) {
-            Text(
-                "Park Solution",
-                color = Color.White,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text("Connected", color = Color.White, fontSize = 14.sp)
+        Text(
+            text = "MyApp", // Or your app name
+            color = Color.White,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        )
+
+        // Connection status chip
+        Card(
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (isConnected)
+                    Color(0xFF4CAF50).copy(alpha = 0.9f)
+                else
+                    Color(0xFFFF5722).copy(alpha = 0.9f)
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = if (isConnected) FontAwesomeIcons.Solid.Wifi else FontAwesomeIcons.Solid.Wifi,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp),
+                    tint = Color.White
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (isConnected) "Connected" else "Offline",
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }
-
-data class NavigationItems(
-    val title: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val badgeCount: Int? = null
-)
-

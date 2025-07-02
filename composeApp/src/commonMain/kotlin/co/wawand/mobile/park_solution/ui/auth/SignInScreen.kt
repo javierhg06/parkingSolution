@@ -49,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.mmk.kmpauth.firebase.google.GoogleButtonUiContainerFirebase
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Solid
+import compose.icons.fontawesomeicons.solid.Car
 import compose.icons.fontawesomeicons.solid.UserAlt
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -162,7 +163,7 @@ fun SignInScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = FontAwesomeIcons.Solid.UserAlt,
+                            imageVector = FontAwesomeIcons.Solid.Car,
                             contentDescription = "App Logo",
                             modifier = Modifier.size(64.dp),
                             tint = Color(0xFF667eea)

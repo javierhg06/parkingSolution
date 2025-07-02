@@ -25,8 +25,6 @@ data class CompanySetUpSettingsState(
     val companyAddress: String = "",
     val wifiNetwork: String = "",
     val totalParkingSpaces: Int = 2,
-    val latitude: String = "",
-    val longitude: String = "",
     val existingConfig: CompanyConfig? = null,
     val workingHours: WorkingHours = WorkingHours(
         start = LocalTime(6, 0).format(DefaultTimeFormat),
@@ -70,14 +68,6 @@ class CompanySetUpSettingsViewModel(
 
     fun onWifiSSIDChanged(ssid: String) {
         _uiState.update { it.copy(wifiNetwork = ssid) }
-    }
-
-    fun onLatitudeChanged(latitude: String) {
-        _uiState.update { it.copy(latitude = latitude) }
-    }
-
-    fun onLongitudeChanged(longitude: String) {
-        _uiState.update { it.copy(longitude = longitude) }
     }
 
     fun onParkingSpacesChanged(spaces: Int) {
@@ -188,8 +178,6 @@ class CompanySetUpSettingsViewModel(
             wifiNetwork = state.wifiNetwork,
             totalParkingSpaces = state.totalParkingSpaces,
             ownerId = ownerId,
-            latitude = state.latitude.toDouble(),
-            longitude = state.longitude.toDouble(),
             accessCode = generateAccessCode()
         )
         println("----------->> pan: $pan")
@@ -300,93 +288,11 @@ class CompanySetUpSettingsViewModel(
         }
     }
 
-
-//    fun addCompanyConfig() {
-//        viewModelScope.launch {
-//            _uiState.update {
-//                it.copy(
-//                    errorMessage = "",
-//                    createCompanyState = CreateCompanyState.Loading
-//                )
-//            }
-//            try {
-//                val ownerId = userRepository.getCurrentUserId()
-//                val companyConfig = CompanyConfig(
-//                    name = _uiState.value.companyName,
-//                    address = _uiState.value.companyAddress,
-//                    wifiNetwork = _uiState.value.wifiNetwork,
-//                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
-//                    ownerId = ownerId ?: "",
-//                    latitude = _uiState.value.latitude.toDouble(),
-//                    longitude = _uiState.value.longitude.toDouble(),
-//                    accessCode = generateAccessCode()
-//                )
-//                println("---------->> companyConfig: $companyConfig")
-//                companyConfigRepository.saveCompanyConfig(companyConfig)
-//                _uiState.update {
-//                    it.copy(
-//                        existingConfig = companyConfig,
-//                        createCompanyState = CreateCompanyState.Success,
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                _uiState.update {
-//                    it.copy(
-//                        errorMessage = e.message ?: "\"Unknown error occurred\"",
-//                        createCompanyState = CreateCompanyState.Error
-//                    )
-//                }
-//            }
-//        }
-//    }
-//
-//    fun updateCompanyConfig() {
-//        viewModelScope.launch {
-//            _uiState.update {
-//                it.copy(
-//                    errorMessage = "",
-//                    createCompanyState = CreateCompanyState.Loading
-//                )
-//            }
-//            try {
-//                val companyConfig = CompanyConfig(
-//                    id = _uiState.value.existingConfig?.id ?: "",
-//                    name = _uiState.value.companyName,
-//                    address = _uiState.value.companyAddress,
-//                    wifiNetwork = _uiState.value.wifiNetwork,
-//                    totalParkingSpaces = _uiState.value.totalParkingSpaces,
-//                    ownerId = _uiState.value.existingConfig?.ownerId ?: "",
-//                    latitude = _uiState.value.latitude.toDouble(),
-//                    longitude = _uiState.value.longitude.toDouble(),
-//                    accessCode = _uiState.value.existingConfig?.accessCode ?: "",
-//                )
-//                println("---------->> companyConfig: $companyConfig")
-//                companyConfigRepository.updateCompanyConfig(companyConfig)
-//                _uiState.update {
-//                    it.copy(
-//                        existingConfig = companyConfig,
-//                        createCompanyState = CreateCompanyState.Success
-//                    )
-//                }
-//            } catch (e: Exception) {
-//                println("------------------>> updateCompanyConfig: 🔥 Firestore error: ${e.message}")
-//                _uiState.update {
-//                    it.copy(
-//                        errorMessage = e.message ?: "Unknown error occurred",
-//                        createCompanyState = CreateCompanyState.Error
-//                    )
-//                }
-//            }
-//        }
-//    }
-
     fun isFormValid(): Boolean {
         return _uiState.value.companyName.isNotBlank() &&
                 _uiState.value.companyAddress.isNotBlank() &&
                 _uiState.value.wifiNetwork.isNotBlank() &&
-                _uiState.value.totalParkingSpaces > 0 &&
-                _uiState.value.latitude.isNotBlank() &&
-                _uiState.value.longitude.isNotBlank()
+                _uiState.value.totalParkingSpaces > 0
     }
 
 }

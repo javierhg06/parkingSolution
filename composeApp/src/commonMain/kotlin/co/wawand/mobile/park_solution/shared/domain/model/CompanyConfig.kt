@@ -10,8 +10,6 @@ data class CompanyConfig(
     val name: String,
     val address: String,
     val wifiNetwork: String,
-    val latitude: Double,
-    val longitude: Double,
     val totalParkingSpaces: Int,
     val accessCode: String,
     val ownerId: String
