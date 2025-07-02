@@ -64,7 +64,7 @@ class ParkingViewModel(
         }
     }
 
-     fun toggleCompanyParkingSpace(
+    fun toggleCompanyParkingSpace(
         parkingSpace: ParkingSpaceWithUser,
         onError: (String) -> Unit
     ) {

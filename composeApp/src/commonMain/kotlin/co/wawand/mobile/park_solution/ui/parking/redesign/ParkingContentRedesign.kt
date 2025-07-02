@@ -51,6 +51,7 @@ import co.wawand.mobile.park_solution.shared.domain.model.ParkingSpaceWithUser
 import co.wawand.mobile.park_solution.shared.domain.model.User
 import co.wawand.mobile.park_solution.shared.util.displayResult
 import co.wawand.mobile.park_solution.ui.parking.ParkingViewModel
+import co.wawand.mobile.park_solution.ui.utils.formatToHourMinute
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Regular
 import compose.icons.fontawesomeicons.Solid
@@ -86,6 +87,7 @@ fun ParkingContentRedesigned(messageBarState: MessageBarState) {
         isLoading = uiState.isLoading,
         messageBarState = messageBarState,
         currentUserSpace = uiState.parkingSpaces.indexOfFirst { it.user == uiState.currentUser } + 1,
+        selectedSpaceInfo = uiState.parkingSpaces.find { it.user == uiState.currentUser },
         onSpaceClicked = viewModel::toggleCompanyParkingSpace
     )
 }
@@ -93,6 +95,7 @@ fun ParkingContentRedesigned(messageBarState: MessageBarState) {
 @Composable
 fun ImprovedCurrentParkingStatus(
     currentSpace: Int,
+    selectedSpaceInfo: ParkingSpaceWithUser?,
     onLeaveClicked: () -> Unit
 ) {
     if (currentSpace != 0) {
@@ -133,7 +136,7 @@ fun ImprovedCurrentParkingStatus(
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "Parked since 9:15 AM",
+                        text = "Parked since ${selectedSpaceInfo?.parkingSpace?.occupiedAt.formatToHourMinute()}",
                         fontSize = 14.sp,
                         color = Color.White.copy(alpha = 0.9f)
                     )
@@ -170,6 +173,7 @@ fun ImprovedParkingGrid(
     spaces: List<ParkingSpaceWithUser>,
     currentUser: User?,
     currentUserSpace: Int,
+    selectedSpaceInfo: ParkingSpaceWithUser?,
     isLoading: Boolean,
     messageBarState: MessageBarState,
     onSpaceClicked: (parkingSpace: ParkingSpaceWithUser, onError: (String) -> Unit) -> Unit,
@@ -183,6 +187,7 @@ fun ImprovedParkingGrid(
         item(span = { GridItemSpan(maxLineSpan) }) {
             ImprovedCurrentParkingStatus(
                 currentSpace = currentUserSpace,
+                selectedSpaceInfo = selectedSpaceInfo,
                 onLeaveClicked = {
                     onSpaceClicked(
                         spaces[currentUserSpace - 1],
