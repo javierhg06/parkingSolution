@@ -1,5 +1,8 @@
 package co.wawand.mobile.park_solution.ui.companySetUpSettings.stateContent
 
+import AppColors
+import AppElevation
+import AppSpacing
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
@@ -26,7 +29,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -34,6 +36,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -42,11 +45,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -62,7 +63,318 @@ import compose.icons.fontawesomeicons.solid.Copy
 import compose.icons.fontawesomeicons.solid.Key
 import compose.icons.fontawesomeicons.solid.Users
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+
+@Composable
+fun SuccessScreen(
+    accessCode: String,
+    navigateToHome: () -> Unit
+) {
+    Scaffold { innerPadding ->
+        val clipboardManager = LocalClipboardManager.current
+        var showCopiedMessage by remember { mutableStateOf(false) }
+
+        // Animation states
+        var visible by remember { mutableStateOf(false) }
+        val animatedScale by animateFloatAsState(
+            targetValue = if (visible) 1f else 0.8f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            ),
+            label = "scale"
+        )
+        val animatedAlpha by animateFloatAsState(
+            targetValue = if (visible) 1f else 0f,
+            animationSpec = tween(durationMillis = 800),
+            label = "alpha"
+        )
+
+        LaunchedEffect(Unit) {
+            visible = true
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(innerPadding)
+        ) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+                    .padding(AppSpacing.md)
+                    .graphicsLayer {
+                        scaleX = animatedScale
+                        scaleY = animatedScale
+                        alpha = animatedAlpha
+                    },
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+
+                // Animated Success Icon with glow effect
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(140.dp)
+                ) {
+                    // Glow effect background
+                    Surface(
+                        modifier = Modifier.size(120.dp),
+                        shape = CircleShape,
+                        color = AppColors.Success.copy(alpha = 0.1f)
+                    ) {}
+
+                    Surface(
+                        modifier = Modifier.size(100.dp),
+                        shape = CircleShape,
+                        color = AppColors.Success.copy(alpha = 0.15f)
+                    ) {}
+
+                    Surface(
+                        modifier = Modifier.size(80.dp),
+                        shape = CircleShape,
+                        color = AppColors.Success.copy(alpha = 0.2f),
+                        shadowElevation = AppElevation.medium
+                    ) {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.Check,
+                                contentDescription = "Success",
+                                tint = AppColors.Success,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+                // Enhanced title
+                Text(
+                    text = "🎉 Company Created!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                )
+
+                Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+                Text(
+                    text = "Your team workspace is ready to go",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(AppSpacing.xxl))
+
+                // Enhanced Access Code Card
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    shape = MaterialTheme.shapes.large,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = AppElevation.medium
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(AppSpacing.xl),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.Key,
+                                contentDescription = "Access Code",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(AppSpacing.xs))
+                            Text(
+                                text = "Team Access Code",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(AppSpacing.lg))
+
+                        // Access code with better styling
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.medium,
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        ) {
+                            Text(
+                                text = accessCode,
+                                style = MaterialTheme.typography.headlineLarge.copy(
+                                    fontSize = 36.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 6.sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = AppSpacing.lg)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(AppSpacing.lg))
+
+                        // Enhanced copy button
+                        Button(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(accessCode))
+                                showCopiedMessage = true
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (showCopiedMessage)
+                                    AppColors.Success else MaterialTheme.colorScheme.primary
+                            ),
+                            shape = MaterialTheme.shapes.medium,
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = AppElevation.small
+                            )
+                        ) {
+                            AnimatedContent(
+                                targetState = showCopiedMessage,
+                                transitionSpec = {
+                                    slideInVertically { -it } + fadeIn() togetherWith
+                                            slideOutVertically { it } + fadeOut()
+                                },
+                                label = "button_content"
+                            ) { copied ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (copied)
+                                            FontAwesomeIcons.Solid.Check else
+                                            FontAwesomeIcons.Solid.Copy,
+                                        contentDescription = if (copied) "Copied" else "Copy",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(AppSpacing.xs))
+                                    Text(
+                                        text = if (copied) "Copied to Clipboard!" else "Copy Access Code",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AppSpacing.xl))
+
+                // Information section with better styling
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = AppElevation.none
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier.padding(AppSpacing.lg),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Users,
+                            contentDescription = "Team",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+
+                        Text(
+                            text = "Share this code with your team",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.xs))
+
+                        Text(
+                            text = "Team members can use this 6-digit code to join your parking management workspace and start collaborating.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(AppSpacing.lg))
+
+                // Navigation info with loading indicator
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(AppSpacing.sm))
+                    Text(
+                        text = "Preparing your dashboard...",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+        LaunchedEffect(showCopiedMessage) {
+            if (showCopiedMessage) {
+                delay(3000)
+                showCopiedMessage = false
+            }
+        }
+
+        LaunchedEffect(Unit) {
+            delay(3000)
+            navigateToHome()
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+
 
 @Composable
 fun SuccessScreen(
@@ -373,4 +685,4 @@ fun SuccessScreen(
             navigateToHome()
         }
     }
-}
+}*/

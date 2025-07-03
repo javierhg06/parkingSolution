@@ -1,8 +1,11 @@
 package co.wawand.mobile.park_solution.ui.companySetUpSettings.create
 
+import AppColors
+import AppElevation
+import AppSpacing
 import ContentWithMessageBar
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +19,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -63,6 +67,460 @@ import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Wifi
 import org.koin.compose.viewmodel.koinViewModel
 import rememberMessageBarState
+
+
+@Composable
+fun CreateCompanyFlow(
+    navigateToHome: () -> Unit = {},
+    navigateToSignIn: () -> Unit = {}
+) {
+    val viewModel = koinViewModel<CompanySetUpSettingsViewModel>()
+    val uiState by viewModel.uiState.collectAsState()
+
+    when (uiState.createCompanyState) {
+        CreateCompanyState.Form -> {
+            CreateCompanyScreen(viewModel, uiState, navigateToSignIn)
+        }
+
+        CreateCompanyState.Loading -> {
+            LoadingScreen()
+        }
+
+        CreateCompanyState.Success -> {
+            SuccessScreen(
+                accessCode = uiState.existingConfig?.accessCode ?: "",
+                navigateToHome = navigateToHome
+            )
+        }
+
+        CreateCompanyState.Error -> {
+            ErrorScreen(
+                errorMessage = uiState.errorMessage,
+                onRetry = { viewModel.onRetry() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun CreateCompanyScreen(
+    viewModel: CompanySetUpSettingsViewModel,
+    uiState: CompanySetUpSettingsState,
+    navigateToSignIn: () -> Unit,
+) {
+    val mainViewModel = koinViewModel<MainViewModel>()
+    val messageBarState = rememberMessageBarState()
+    val scrollState = rememberScrollState()
+    val focusManager = LocalFocusManager.current
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background
+    ) {
+        ContentWithMessageBar(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+            messageBarState = messageBarState,
+            errorMaxLines = 2,
+            errorContainerColor = AppColors.Error,
+            errorContentColor = Color.White,
+            contentBackgroundColor = Color.Transparent
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = AppSpacing.sm)
+                    .verticalScroll(scrollState),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(AppSpacing.md))
+
+                // Sign Out button at the top
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = {
+                            mainViewModel.signOut(
+                                onSuccess = navigateToSignIn,
+                                onError = { message -> messageBarState.addError(message) }
+                            )
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                            contentDescription = "Sign Out",
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(AppSpacing.xs))
+                        Text(
+                            text = "Sign Out",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+                }
+
+                CompanyHeader()
+                Spacer(Modifier.height(AppSpacing.xl))
+                CompanyForm(uiState, viewModel, focusManager)
+                Spacer(Modifier.height(AppSpacing.lg))
+                AccessCodeInfo()
+                Spacer(Modifier.height(AppSpacing.xl))
+                CreateCompanyButton(
+                    onClick = viewModel::saveCompanyConfigAndUpdateCurrentUser,
+                    enabled = viewModel.isFormValid()
+                )
+                Spacer(Modifier.height(AppSpacing.lg))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CompanyHeader() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Card(
+            modifier = Modifier.size(72.dp),
+            shape = MaterialTheme.shapes.large,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = FontAwesomeIcons.Solid.Building,
+                    contentDescription = "Company Setup",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(AppSpacing.md))
+
+        Text(
+            text = "Create Company",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.xs))
+
+        Text(
+            text = "Set up your parking management system",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun CompanyForm(
+    uiState: CompanySetUpSettingsState,
+    viewModel: CompanySetUpSettingsViewModel,
+    focusManager: FocusManager
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.md + AppSpacing.xxs) // 20dp
+    ) {
+        LabeledTextField(
+            label = "Company Name",
+            value = uiState.companyName,
+            onValueChange = viewModel::onCompanyNameChanged,
+            placeholder = "Enter company name",
+            icon = FontAwesomeIcons.Solid.Building,
+            imeAction = ImeAction.Next,
+            onDone = { focusManager.moveFocus(FocusDirection.Down) }
+        )
+
+        LabeledTextField(
+            label = "Company Address",
+            value = uiState.companyAddress,
+            onValueChange = viewModel::onCompanyAddressChanged,
+            placeholder = "Street address",
+            icon = FontAwesomeIcons.Solid.MapMarkerAlt,
+            imeAction = ImeAction.Next,
+            onDone = { focusManager.moveFocus(FocusDirection.Down) },
+            maxLines = 2
+        )
+
+        LabeledTextField(
+            label = "WiFi Network",
+            value = uiState.wifiNetwork,
+            onValueChange = viewModel::onWifiSSIDChanged,
+            placeholder = "Network name (optional)",
+            icon = FontAwesomeIcons.Solid.Wifi,
+            imeAction = ImeAction.Done,
+            onDone = { focusManager.clearFocus(true) }
+        )
+
+        LabeledParkSpaces(
+            label = "Parking Spaces",
+            value = uiState.totalParkingSpaces,
+            onValueChange = { viewModel.onParkingSpacesChanged(it) },
+            icon = FontAwesomeIcons.Solid.Car,
+        )
+    }
+}
+
+@Composable
+private fun AccessCodeInfo() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none)
+    ) {
+        Row(
+            modifier = Modifier.padding(AppSpacing.md),
+            verticalAlignment = Alignment.Top
+        ) {
+            Icon(
+                imageVector = FontAwesomeIcons.Solid.Key,
+                contentDescription = "Access Code",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(Modifier.width(AppSpacing.sm))
+            Column {
+                Text(
+                    text = "Access Code",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Spacer(Modifier.height(AppSpacing.xxs))
+                Text(
+                    text = "You'll receive a 6-digit code for team members to join your company.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = 20.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreateCompanyButton(onClick: () -> Unit, enabled: Boolean) {
+    Button(
+        enabled = enabled,
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+        ),
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = AppElevation.small,
+            pressedElevation = AppElevation.medium,
+            disabledElevation = AppElevation.none
+        )
+    ) {
+        Text(
+            text = "Create Company",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimary
+        )
+        Spacer(Modifier.width(AppSpacing.xs))
+        Icon(
+            imageVector = FontAwesomeIcons.Solid.ArrowRight,
+            contentDescription = "Continue",
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun LabeledParkSpaces(
+    label: String,
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    icon: ImageVector,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = AppSpacing.xs)
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.medium,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.none),
+            border = BorderStroke(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outline
+            )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(AppSpacing.md),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = label,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(AppSpacing.sm))
+                    Text(
+                        text = "$value spaces",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xs),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Remove button
+                    IconButton(
+                        onClick = {
+                            if (value > 2) {
+                                onValueChange(value - 1)
+                            }
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = if (value > 2) AppColors.Error.copy(alpha = 0.1f)
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                                shape = CircleShape
+                            ),
+                        enabled = value > 2
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Minus,
+                            contentDescription = "Remove space",
+                            modifier = Modifier.size(14.dp),
+                            tint = if (value > 2) AppColors.Error
+                            else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                        )
+                    }
+
+                    // Add button
+                    IconButton(
+                        onClick = {
+                            onValueChange(value + 1)
+                        },
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = AppColors.Success.copy(alpha = 0.1f),
+                                shape = CircleShape
+                            )
+                    ) {
+                        Icon(
+                            imageVector = FontAwesomeIcons.Solid.Plus,
+                            contentDescription = "Add space",
+                            modifier = Modifier.size(14.dp),
+                            tint = AppColors.Success
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LabeledTextField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier.fillMaxWidth(),
+    keyboardType: KeyboardType = KeyboardType.Text,
+    imeAction: ImeAction = ImeAction.Next,
+    onDone: () -> Unit,
+    maxLines: Int = 1
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(bottom = AppSpacing.xs)
+        )
+        OutlinedTextField(
+            value = value,
+            onValueChange = onValueChange,
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            },
+            shape = MaterialTheme.shapes.medium,
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+            ),
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = keyboardType,
+                imeAction = imeAction
+            ),
+            keyboardActions = KeyboardActions(onDone = { onDone() }),
+            maxLines = maxLines,
+            textStyle = MaterialTheme.typography.bodyLarge,
+            leadingIcon = {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        )
+    }
+}
+
+
+
+
+
+
+
+/*
+
 
 
 @Composable
@@ -505,6 +963,7 @@ private fun LabeledTextField(
         )
     }
 }
+*/
 
 
 

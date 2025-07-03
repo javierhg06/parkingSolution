@@ -29,8 +29,6 @@ fun LoadingScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            //CompanyDescription()
-
             Spacer(modifier = Modifier.height(48.dp))
 
             CircularProgressIndicator(

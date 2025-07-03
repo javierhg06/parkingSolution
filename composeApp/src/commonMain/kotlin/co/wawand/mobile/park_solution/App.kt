@@ -1,5 +1,6 @@
 package co.wawand.mobile.park_solution
 
+import AppTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -7,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,18 +28,20 @@ import org.koin.compose.koinInject
 fun App() {
     val viewModel = koinInject<AppViewModel>()
     val state by viewModel.uiState.collectAsState()
-    MaterialTheme {
+    //MaterialTheme {
+    AppTheme {
         when (val appState = state.appState) {
             is AppState.Loading -> SplashScreen()
             is AppState.Error -> ErrorScreen(message = appState.message)
             is AppState.Ready -> Navigation(startDestination = appState.startDestination)
         }
     }
+    //}
 }
 
 @Composable
 fun SplashScreen() {
-    Scaffold {innerPadding ->
+    Scaffold { innerPadding ->
         Box(
             modifier = Modifier.fillMaxSize().padding(innerPadding),
             contentAlignment = Alignment.Center

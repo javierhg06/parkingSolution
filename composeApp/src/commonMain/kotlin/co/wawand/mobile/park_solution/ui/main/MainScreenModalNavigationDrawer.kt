@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -55,14 +54,13 @@ import compose.icons.fontawesomeicons.solid.Car
 import compose.icons.fontawesomeicons.solid.Cog
 import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.User
-import compose.icons.fontawesomeicons.solid.Wifi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.koin.compose.viewmodel.koinViewModel
 import rememberMessageBarState
 
 @Composable
-fun MainScreen(navigateToSignIn: () -> Unit) {
+fun MainScreenModalNavigationDrawer(navigateToSignIn: () -> Unit) {
     val viewModel = koinViewModel<MainViewModel>()
     val messageBarState = rememberMessageBarState()
     val scope = rememberCoroutineScope()
@@ -299,7 +297,7 @@ private fun MainContent(
             )
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             TopBar(
                 onMenuClick = {
                     scope.launch {
@@ -307,7 +305,7 @@ private fun MainContent(
                     }
                 },
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Content Area with rounded corners
             Card(
@@ -364,45 +362,6 @@ private fun TopBar(
                 modifier = Modifier.size(18.dp),
                 tint = Color.White
             )
-        }
-
-        Text(
-            text = "MyApp", // Or your app name
-            color = Color.White,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 1.sp
-        )
-
-        // Connection status chip
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isConnected)
-                    Color(0xFF4CAF50).copy(alpha = 0.9f)
-                else
-                    Color(0xFFFF5722).copy(alpha = 0.9f)
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-        ) {
-            Row(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = if (isConnected) FontAwesomeIcons.Solid.Wifi else FontAwesomeIcons.Solid.Wifi,
-                    contentDescription = null,
-                    modifier = Modifier.size(12.dp),
-                    tint = Color.White
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = if (isConnected) "Connected" else "Offline",
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Medium
-                )
-            }
         }
     }
 }

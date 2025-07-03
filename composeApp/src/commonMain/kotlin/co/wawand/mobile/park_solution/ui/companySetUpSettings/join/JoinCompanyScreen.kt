@@ -1,5 +1,8 @@
 package co.wawand.mobile.park_solution.ui.companySetUpSettings.join
 
+import AppColors
+import AppElevation
+import AppSpacing
 import ContentWithMessageBar
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -25,7 +28,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -35,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -71,6 +74,440 @@ import compose.icons.fontawesomeicons.solid.SignOutAlt
 import compose.icons.fontawesomeicons.solid.Users
 import org.koin.compose.viewmodel.koinViewModel
 import rememberMessageBarState
+
+
+@Composable
+fun JoinCompanyScreen(
+    navigateToHome: () -> Unit,
+    navigateToSignIn: () -> Unit = {}
+) {
+    val mainViewModel = koinViewModel<MainViewModel>()
+    val viewModel = koinViewModel<JoinCompanyViewModel>()
+    val uiState by viewModel.uiState.collectAsState()
+    val scrollState = rememberScrollState()
+    val messageBarState = rememberMessageBarState()
+
+    // Animation states
+    var visible by remember { mutableStateOf(false) }
+    val animatedOffset by animateDpAsState(
+        targetValue = if (visible) 0.dp else 50.dp,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "offset"
+    )
+    val animatedAlpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(durationMillis = 600),
+        label = "alpha"
+    )
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
+
+    Scaffold(
+        containerColor = Color.Transparent
+    ) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            MaterialTheme.colorScheme.surfaceVariant,
+                            MaterialTheme.colorScheme.surface
+                        )
+                    )
+                )
+        ) {
+            ContentWithMessageBar(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                messageBarState = messageBarState,
+                errorMaxLines = 2,
+                errorContainerColor = AppColors.Error,
+                errorContentColor = Color.White,
+                contentBackgroundColor = Color.Transparent
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(horizontal = AppSpacing.md)
+                        .verticalScroll(scrollState)
+                        .graphicsLayer {
+                            translationY = animatedOffset.toPx()
+                            alpha = animatedAlpha
+                        },
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(Modifier.height(AppSpacing.md))
+
+                    // Sign Out button at the top
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(
+                            onClick = {
+                                mainViewModel.signOut(
+                                    onSuccess = {
+                                        navigateToSignIn()
+                                    },
+                                    onError = { message -> messageBarState.addError(message) }
+                                )
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.SignOutAlt,
+                                contentDescription = "Sign Out",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(AppSpacing.xs))
+                            Text(
+                                text = "Sign Out",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium
+                                )
+                            )
+                        }
+                    }
+
+                    EnhancedCompanyIcon()
+                    EnhancedTitleSection()
+                    Spacer(Modifier.height(AppSpacing.xxxl - AppSpacing.md)) // 48dp
+                    EnhancedAccessCodeSection(
+                        code = uiState.accessCode,
+                        onCodeChange = viewModel::onAccessCodeChanged,
+                        errorMessage = uiState.joinedCompanyErrorMessage,
+                        isLoading = uiState.isJoiningCompany
+                    )
+                    Spacer(Modifier.height(AppSpacing.xl))
+                    EnhancedJoinCompanyButton(uiState.accessCode, viewModel::onJoinCompanyClick)
+                    Spacer(Modifier.height(AppSpacing.lg))
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(uiState.redirectToHome) {
+        if (uiState.redirectToHome) {
+            navigateToHome()
+        }
+    }
+}
+
+@Composable
+private fun EnhancedAccessCodeSection(
+    code: String,
+    onCodeChange: (String) -> Unit,
+    errorMessage: String,
+    isLoading: Boolean
+) {
+    val focusManager = LocalFocusManager.current
+
+    Column(Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = FontAwesomeIcons.Solid.Key,
+                contentDescription = "Access Code",
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.xs))
+            Text(
+                text = "Company Access Code",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
+
+        Spacer(Modifier.height(AppSpacing.md + AppSpacing.xxs)) // 20dp
+
+        if (isLoading) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.large)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 3.dp
+                        )
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        Text(
+                            text = "Verifying code...",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+        } else {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.large)
+            ) {
+                Column(
+                    modifier = Modifier.padding(AppSpacing.lg)
+                ) {
+                    OutlinedTextField(
+                        value = code,
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 6 && newValue.all { it.isDigit() }) {
+                                onCodeChange(newValue)
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(80.dp),
+                        textStyle = TextStyle(
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 8.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        placeholder = {
+                            Text(
+                                text = "000000",
+                                fontSize = 32.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 8.sp,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Unspecified,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { focusManager.clearFocus() },
+                            onSearch = { focusManager.clearFocus() }
+                        ),
+                        singleLine = true,
+                        shape = MaterialTheme.shapes.medium,
+                        isError = errorMessage.isNotEmpty(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                            errorBorderColor = AppColors.Error,
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+
+                    if (errorMessage.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(AppSpacing.sm))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = FontAwesomeIcons.Solid.ExclamationTriangle,
+                                contentDescription = "Error",
+                                tint = AppColors.Error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(AppSpacing.xs))
+                            Text(
+                                text = errorMessage,
+                                color = AppColors.Error,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(AppSpacing.md))
+        Text(
+            text = "Enter the 6-digit code exactly as provided by your company administrator",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            lineHeight = 20.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+private fun EnhancedCompanyIcon() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(120.dp)
+    ) {
+        // Glow effect layers usando el primary color
+        Surface(
+            modifier = Modifier.size(100.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+        ) {}
+
+        Surface(
+            modifier = Modifier.size(80.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+        ) {}
+
+        Card(
+            modifier = Modifier.size(64.dp),
+            shape = CircleShape,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = AppElevation.large)
+        ) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = FontAwesomeIcons.Solid.Users,
+                    contentDescription = "Company",
+                    modifier = Modifier.size(32.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun EnhancedTitleSection() {
+    Text(
+        text = "👋 Join Your Team",
+        style = MaterialTheme.typography.headlineMedium.copy(
+            fontWeight = FontWeight.ExtraBold
+        ),
+        color = MaterialTheme.colorScheme.onBackground,
+        textAlign = TextAlign.Center
+    )
+    Spacer(Modifier.height(AppSpacing.sm))
+    Text(
+        text = "Connect with your company's parking workspace using your unique access code",
+        style = MaterialTheme.typography.titleMedium.copy(
+            fontWeight = FontWeight.Medium
+        ),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        lineHeight = 26.sp
+    )
+}
+
+@Composable
+private fun EnhancedJoinCompanyButton(accessCode: String, onClick: () -> Unit = {}) {
+    val isCodeValid = accessCode.length == 6
+
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp),
+        enabled = isCodeValid,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        ),
+        shape = MaterialTheme.shapes.large,
+        elevation = ButtonDefaults.buttonElevation(
+            defaultElevation = if (isCodeValid) AppElevation.medium else AppElevation.none
+        )
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AnimatedVisibility(
+                visible = isCodeValid,
+                enter = slideInHorizontally() + fadeIn(),
+                exit = slideOutHorizontally() + fadeOut()
+            ) {
+                Row {
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.Users,
+                        contentDescription = "Join",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.width(AppSpacing.sm))
+                }
+            }
+
+            Text(
+                text = if (isCodeValid) "Join Company" else "Enter 6-digit code",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+
+            AnimatedVisibility(
+                visible = isCodeValid,
+                enter = slideInHorizontally() + fadeIn(),
+                exit = slideOutHorizontally() + fadeOut()
+            ) {
+                Row {
+                    Spacer(Modifier.width(AppSpacing.sm))
+                    Icon(
+                        imageVector = FontAwesomeIcons.Solid.ArrowRight,
+                        contentDescription = "Arrow right",
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+/*
+
 
 @Composable
 fun JoinCompanyScreen(
@@ -482,3 +919,4 @@ private fun EnhancedJoinCompanyButton(accessCode: String, onClick: () -> Unit = 
         }
     }
 }
+*/

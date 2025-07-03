@@ -104,5 +104,4 @@ class UserProfileViewModel(userRepository: UserRepository) : ViewModel() {
             )
         }
     }
-
 }

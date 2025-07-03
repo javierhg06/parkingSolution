@@ -7,7 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import co.wawand.mobile.park_solution.ui.auth.SignInScreenRedesigned
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.create.CreateCompanyFlow
 import co.wawand.mobile.park_solution.ui.companySetUpSettings.join.JoinCompanyScreen
-import co.wawand.mobile.park_solution.ui.main.MainScreen
+import co.wawand.mobile.park_solution.ui.main.MainScreenBottomNav
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -81,7 +81,7 @@ fun Navigation(startDestination: Screen = Screen.SignInScreen) {
         }
 
         composable<Screen.MainScreen> {
-            MainScreen(
+            MainScreenBottomNav (
                 navigateToSignIn = {
                     navController.navigate(Screen.SignInScreen) {
                         popUpTo<Screen.MainScreen> { inclusive = true }
